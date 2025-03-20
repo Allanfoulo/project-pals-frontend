@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 
@@ -10,6 +11,7 @@ const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!isAuthenticated && !location.pathname.includes("/auth")) {
@@ -17,8 +19,28 @@ const Layout = () => {
     }
   }, [isAuthenticated, navigate, location.pathname]);
 
+  // Retrieve sidebar state from localStorage on mount
+  useEffect(() => {
+    const savedState = localStorage.getItem("sidebarCollapsed");
+    if (savedState) {
+      setSidebarCollapsed(savedState === "true");
+    }
+  }, []);
+
   const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
+    const newState = !sidebarCollapsed;
+    setSidebarCollapsed(newState);
+    // Save sidebar state to localStorage
+    localStorage.setItem("sidebarCollapsed", String(newState));
+    
+    // Show a toast notification when sidebar state changes
+    toast({
+      title: newState ? "Sidebar collapsed" : "Sidebar expanded",
+      description: newState 
+        ? "Click the menu icon to expand it again." 
+        : "You now have more space for navigation.",
+      duration: 2000,
+    });
   };
 
   return (
@@ -32,6 +54,9 @@ const Layout = () => {
               <Outlet />
             </div>
           </main>
+          <footer className="border-t bg-background p-4 text-center text-sm text-muted-foreground">
+            <p>TaskFlow &copy; {new Date().getFullYear()} - Project Management Made Simple</p>
+          </footer>
         </div>
       </div>
     </div>
