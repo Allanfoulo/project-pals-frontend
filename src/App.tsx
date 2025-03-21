@@ -21,6 +21,11 @@ import ProjectsList from "@/pages/projects/ProjectsList";
 import ProjectDetail from "@/pages/projects/ProjectDetail";
 import NotFound from "@/pages/NotFound";
 
+// New Pages
+import Calendar from "@/pages/calendar/Calendar";
+import Tasks from "@/pages/tasks/Tasks";
+import Team from "@/pages/team/Team";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -42,7 +47,9 @@ const App = () => (
                   <Route index element={<Dashboard />} />
                   <Route path="projects" element={<ProjectsList />} />
                   <Route path="projects/:projectId" element={<ProjectDetail />} />
-                  {/* Add more routes for other pages like calendar, tasks, etc. */}
+                  <Route path="calendar" element={<Calendar />} />
+                  <Route path="tasks" element={<Tasks />} />
+                  <Route path="team" element={<Team />} />
                   <Route path="*" element={<NotFound />} />
                 </Route>
               </Routes>
