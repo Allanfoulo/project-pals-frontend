@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface TopBarProps {
   onToggleSidebar: () => void;
@@ -82,6 +83,8 @@ const TopBar = ({ onToggleSidebar }: TopBarProps) => {
       </div>
 
       <div className="flex items-center space-x-4">
+        <ThemeToggle />
+        
         <Popover>
           <PopoverTrigger asChild>
             <Button
