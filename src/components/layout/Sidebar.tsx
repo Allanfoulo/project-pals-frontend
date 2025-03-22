@@ -7,6 +7,7 @@ import {
   Calendar,
   List,
   Settings,
+  User,
   Plus,
   Star,
   Users,
@@ -198,16 +199,30 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
       </div>
 
       <div className="p-4 border-t border-border">
-        <Link
-          to="/settings"
-          className={cn(
-            "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-all hover:bg-secondary/50",
-            collapsed && "justify-center"
-          )}
-        >
-          <Settings size={20} />
-          {!collapsed && <span className="ml-3">Settings</span>}
-        </Link>
+        <div className="space-y-1">
+          <Link
+            to="/profile"
+            className={cn(
+              "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-all hover:bg-secondary/50",
+              location.pathname === "/profile" ? "bg-secondary text-primary" : "text-sidebar-foreground",
+              collapsed && "justify-center"
+            )}
+          >
+            <User size={20} />
+            {!collapsed && <span className="ml-3">Profile</span>}
+          </Link>
+          <Link
+            to="/settings"
+            className={cn(
+              "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-all hover:bg-secondary/50",
+              location.pathname === "/settings" ? "bg-secondary text-primary" : "text-sidebar-foreground",
+              collapsed && "justify-center"
+            )}
+          >
+            <Settings size={20} />
+            {!collapsed && <span className="ml-3">Settings</span>}
+          </Link>
+        </div>
         {!collapsed && user && (
           <div className="mt-4 flex items-center px-3 py-2">
             <div className="flex-shrink-0">

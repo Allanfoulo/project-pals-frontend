@@ -9,6 +9,8 @@ import {
   Plus,
   ChevronDown,
   LogOut,
+  User,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -142,12 +144,14 @@ const TopBar = ({ onToggleSidebar }: TopBarProps) => {
                 onSelect={() => navigate("/profile")}
                 className="cursor-pointer"
               >
+                <User size={16} className="mr-2" />
                 Profile
               </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() => navigate("/settings")}
                 className="cursor-pointer"
               >
+                <SettingsIcon size={16} className="mr-2" />
                 Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
