@@ -25,10 +25,13 @@ import NotFound from "@/pages/NotFound";
 import Calendar from "@/pages/calendar/Calendar";
 import Tasks from "@/pages/tasks/Tasks";
 import Team from "@/pages/team/Team";
+import Integrations from "@/pages/integrations";
+import NotificationsPage from "@/pages/notifications/Notifications";
 
 // User Pages
 import Profile from "@/pages/profile/Profile";
 import Settings from "@/pages/settings/Settings";
+import ThemeSettings from "@/pages/settings/ThemeSettings";
 
 const queryClient = new QueryClient();
 
@@ -54,10 +57,13 @@ const App = () => (
                   <Route path="calendar" element={<Calendar />} />
                   <Route path="tasks" element={<Tasks />} />
                   <Route path="team" element={<Team />} />
+                  <Route path="integrations" element={<Integrations />} />
+                  <Route path="notifications" element={<NotificationsPage />} />
                   
                   {/* User Routes */}
                   <Route path="profile" element={<Profile />} />
                   <Route path="settings" element={<Settings />} />
+                  <Route path="settings/theme" element={<ThemeSettings />} />
                   
                   <Route path="*" element={<NotFound />} />
                 </Route>

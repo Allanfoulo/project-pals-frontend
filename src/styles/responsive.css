@@ -1,0 +1,228 @@
+/* Responsive styles for Project Management App */
+
+/* Base responsive adjustments */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  
+  h1 {
+    font-size: 1.5rem;
+  }
+  
+  h2 {
+    font-size: 1.25rem;
+  }
+  
+  /* Fix overflow issues */
+  .max-w-full {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  
+  /* Adjust card padding for mobile */
+  .card {
+    padding: 0.75rem;
+  }
+}
+
+/* Mobile navigation adjustments */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: -100%;
+    top: 0;
+    bottom: 0;
+    width: 80%;
+    max-width: 300px;
+    z-index: 50;
+    transition: left 0.3s ease-in-out;
+  }
+  
+  .sidebar.open {
+    left: 0;
+  }
+  
+  .sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 40;
+  }
+  
+  .sidebar-backdrop.open {
+    display: block;
+  }
+  
+  .mobile-nav-toggle {
+    display: flex;
+  }
+}
+
+/* Analytics components responsive adjustments */
+@media (max-width: 768px) {
+  /* Fix chart container overflow */
+  .recharts-responsive-container {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  
+  /* Adjust grid layouts for analytics */
+  .grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Fix tabs overflow */
+  .tabs-list {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+  
+  .tabs-list::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+  
+  /* Adjust card content for better mobile viewing */
+  .card-content {
+    padding: 0.75rem;
+  }
+  
+  /* Fix table overflow */
+  table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
+/* Board view responsive adjustments */
+@media (max-width: 1024px) {
+  .board-view {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    overflow-x: auto;
+  }
+  
+  .board-column {
+    min-width: 250px;
+  }
+}
+
+/* Calendar view responsive adjustments */
+@media (max-width: 768px) {
+  .calendar-grid {
+    font-size: 0.75rem;
+  }
+  
+  .calendar-day {
+    min-height: 4rem;
+    padding: 0.25rem;
+  }
+  
+  .calendar-task {
+    font-size: 0.65rem;
+    padding: 0.125rem 0.25rem;
+  }
+}
+
+/* Task list responsive adjustments */
+@media (max-width: 640px) {
+  .task-filters {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .task-item-details {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .task-item-actions {
+    width: 100%;
+    justify-content: flex-start;
+    margin-top: 0.5rem;
+  }
+}
+
+/* Form and modal responsive adjustments */
+@media (max-width: 640px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .dialog-content {
+    width: 95%;
+    max-width: none;
+    padding: 1rem;
+  }
+}
+
+/* Dashboard responsive adjustments */
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Specific component adjustments */
+@media (max-width: 640px) {
+  /* Calendar view adjustments */
+  .calendar-day {
+    min-height: 3rem;
+    font-size: 0.75rem;
+  }
+  
+  .calendar-task {
+    font-size: 0.65rem;
+    padding: 0.125rem 0.25rem;
+  }
+  
+  /* Board view adjustments */
+  .board-column {
+    min-width: 200px;
+  }
+  
+  /* Analytics adjustments */
+  .analytics-dashboard .card {
+    margin-bottom: 1rem;
+  }
+  
+  /* Fix tooltip overflow */
+  .recharts-tooltip-wrapper {
+    max-width: 80vw;
+  }
+}
+
+/* Print styles for reports */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  .print-section,
+  .print-section * {
+    visibility: visible;
+  }
+  
+  .print-section {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+}

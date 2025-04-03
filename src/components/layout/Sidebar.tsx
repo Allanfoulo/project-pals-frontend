@@ -12,6 +12,7 @@ import {
   Star,
   Users,
   ChevronRight,
+  Link as LinkIcon,
 } from "lucide-react";
 import { useProjects } from "@/contexts/ProjectContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -53,6 +54,11 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
       name: "Team",
       path: "/team",
       icon: <Users size={20} />,
+    },
+    {
+      name: "Integrations",
+      path: "/integrations",
+      icon: <LinkIcon size={20} />,
     },
   ];
 

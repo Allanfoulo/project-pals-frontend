@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
@@ -11,7 +10,7 @@ import {
   CardTitle 
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// Using custom button-based navigation instead of Tabs to avoid rendering issues
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -24,8 +23,10 @@ import {
   Briefcase, 
   Shield, 
   Save,
-  CreditCard
+  CreditCard,
+  Users
 } from "lucide-react";
+import { CollaborationSettings } from "@/components/collaboration";
 
 const Settings = () => {
   const { theme, setTheme } = useTheme();
@@ -57,21 +58,59 @@ const Settings = () => {
     toast.success("Account settings saved successfully");
   };
 
+  const [activeTab, setActiveTab] = useState("account");
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
       </div>
 
-      <Tabs defaultValue="account" className="w-full">
-        <TabsList className="grid w-full sm:w-auto grid-cols-3 sm:grid-cols-4">
-          <TabsTrigger value="account">Account</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="appearance">Appearance</TabsTrigger>
-          <TabsTrigger value="billing">Billing</TabsTrigger>
-        </TabsList>
+      <div className="w-full">
+        <div className="border rounded-md p-1 flex flex-wrap space-x-1 bg-muted mb-6">
+          <Button 
+            variant={activeTab === "account" ? "default" : "ghost"} 
+            size="sm" 
+            onClick={() => setActiveTab("account")}
+            className="text-sm"
+          >
+            Account
+          </Button>
+          <Button 
+            variant={activeTab === "notifications" ? "default" : "ghost"} 
+            size="sm" 
+            onClick={() => setActiveTab("notifications")}
+            className="text-sm"
+          >
+            Notifications
+          </Button>
+          <Button 
+            variant={activeTab === "appearance" ? "default" : "ghost"} 
+            size="sm" 
+            onClick={() => setActiveTab("appearance")}
+            className="text-sm"
+          >
+            Appearance
+          </Button>
+          <Button 
+            variant={activeTab === "collaboration" ? "default" : "ghost"} 
+            size="sm" 
+            onClick={() => setActiveTab("collaboration")}
+            className="text-sm"
+          >
+            Collaboration
+          </Button>
+          <Button 
+            variant={activeTab === "billing" ? "default" : "ghost"} 
+            size="sm" 
+            onClick={() => setActiveTab("billing")}
+            className="text-sm"
+          >
+            Billing
+          </Button>
+        </div>
 
-        <TabsContent value="account" className="mt-6">
+        {activeTab === "account" && (
           <Card>
             <CardHeader>
               <CardTitle>Account Settings</CardTitle>
@@ -128,9 +167,9 @@ const Settings = () => {
               </Button>
             </CardFooter>
           </Card>
-        </TabsContent>
+        )}
 
-        <TabsContent value="notifications" className="mt-6">
+        {activeTab === "notifications" && (
           <Card>
             <CardHeader>
               <CardTitle>Notification Preferences</CardTitle>
@@ -208,9 +247,9 @@ const Settings = () => {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        )}
 
-        <TabsContent value="appearance" className="mt-6">
+        {activeTab === "appearance" && (
           <Card>
             <CardHeader>
               <CardTitle>Appearance</CardTitle>
@@ -250,9 +289,13 @@ const Settings = () => {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        )}
 
-        <TabsContent value="billing" className="mt-6">
+        {activeTab === "collaboration" && (
+          <CollaborationSettings />
+        )}
+        
+        {activeTab === "billing" && (
           <Card>
             <CardHeader>
               <CardTitle>Subscription & Billing</CardTitle>
@@ -285,8 +328,8 @@ const Settings = () => {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        )}
+      </div>
     </div>
   );
 };

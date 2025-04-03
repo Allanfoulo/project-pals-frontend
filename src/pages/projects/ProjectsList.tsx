@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useProjects } from "@/contexts/ProjectContext";
@@ -23,6 +22,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import ProjectSearch from "@/components/projects/ProjectSearch";
+import CreateProjectModal from "@/components/projects/CreateProjectModal";
 import {
   Calendar,
   CheckCircle2,
@@ -34,46 +35,81 @@ import {
   Filter,
   ArrowUpDown,
   MoreHorizontal,
+  Tag,
+  Users,
+  AlertTriangle,
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, isAfter, parseISO, differenceInDays } from "date-fns";
 
 const ProjectsList = () => {
   const { projects, workspaces, toggleFavorite } = useProjects();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
-  const [workspaceFilter, setWorkspaceFilter] = useState<string | null>(null);
+  const [filteredProjects, setFilteredProjects] = useState(projects);
+  const [sortOption, setSortOption] = useState("favorite");
 
-  // Filter projects based on search query and filters
-  const filteredProjects = projects.filter((project) => {
-    const matchesQuery = project.name
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    const matchesStatus = !statusFilter || project.status === statusFilter;
-    const matchesWorkspace =
-      !workspaceFilter || project.workspace === workspaceFilter;
-    return matchesQuery && matchesStatus && matchesWorkspace;
-  });
-
-  // Sort projects by those with due dates first, then by due date
+  // Sort projects based on selected sort option
   const sortedProjects = [...filteredProjects].sort((a, b) => {
-    // First, sort by favorite status
-    if (a.favorite && !b.favorite) return -1;
-    if (!a.favorite && b.favorite) return 1;
-    
-    // Then, sort by due date (if both have due dates)
-    if (a.dueDate && b.dueDate) {
-      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    switch (sortOption) {
+      case "favorite":
+        // First, sort by favorite status
+        if (a.favorite && !b.favorite) return -1;
+        if (!a.favorite && b.favorite) return 1;
+        // Then by due date
+        if (a.dueDate && b.dueDate) {
+          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+        }
+        return 0;
+      
+      case "dueDate-asc":
+        if (a.dueDate && b.dueDate) {
+          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+        }
+        if (a.dueDate && !b.dueDate) return -1;
+        if (!a.dueDate && b.dueDate) return 1;
+        return 0;
+      
+      case "dueDate-desc":
+        if (a.dueDate && b.dueDate) {
+          return new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
+        }
+        if (a.dueDate && !b.dueDate) return -1;
+        if (!a.dueDate && b.dueDate) return 1;
+        return 0;
+      
+      case "name-asc":
+        return a.name.localeCompare(b.name);
+      
+      case "name-desc":
+        return b.name.localeCompare(a.name);
+      
+      case "progress-asc":
+        return a.progress - b.progress;
+      
+      case "progress-desc":
+        return b.progress - a.progress;
+      
+      case "created-asc":
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      
+      case "created-desc":
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      
+      default:
+        return 0;
     }
-    
-    // Projects with due dates come before projects without due dates
-    if (a.dueDate && !b.dueDate) return -1;
-    if (!a.dueDate && b.dueDate) return 1;
-    
-    // If neither has a due date, sort by creation date (newest first)
-    return (
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
   });
+
+  // Check if a project is overdue or due soon
+  const getProjectTimeStatus = (project) => {
+    if (!project.dueDate) return "none";
+    
+    const dueDate = parseISO(project.dueDate);
+    const today = new Date();
+    const daysRemaining = differenceInDays(dueDate, today);
+    
+    if (daysRemaining < 0) return "overdue";
+    if (daysRemaining <= 7) return "soon";
+    return "normal";
+  };
 
   return (
     <div className="space-y-8">
@@ -85,294 +121,254 @@ const ProjectsList = () => {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Search projects..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 w-full sm:w-64"
-            />
-          </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <Filter className="h-4 w-4" />
-                Filter
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Filter by status</DropdownMenuLabel>
-              {["active", "completed", "onHold"].map((status) => (
-                <DropdownMenuItem
-                  key={status}
-                  className="cursor-pointer"
-                  onClick={() =>
-                    setStatusFilter(
-                      statusFilter === status ? null : status
-                    )
-                  }
-                >
-                  <span
-                    className={`h-2 w-2 rounded-full mr-2 ${
-                      status === "active"
-                        ? "bg-green-500"
-                        : status === "completed"
-                        ? "bg-blue-500"
-                        : "bg-amber-500"
-                    }`}
-                  />
-                  <span className="capitalize">{status}</span>
-                  {statusFilter === status && (
-                    <CheckCircle2 className="ml-auto h-4 w-4" />
-                  )}
-                </DropdownMenuItem>
-              ))}
-              
-              <DropdownMenuSeparator />
-              
-              <DropdownMenuLabel>Filter by workspace</DropdownMenuLabel>
-              {workspaces.map((workspace) => (
-                <DropdownMenuItem
-                  key={workspace.id}
-                  className="cursor-pointer"
-                  onClick={() =>
-                    setWorkspaceFilter(
-                      workspaceFilter === workspace.id ? null : workspace.id
-                    )
-                  }
-                >
-                  <span
-                    className="h-2 w-2 rounded-full mr-2"
-                    style={{ backgroundColor: workspace.color }}
-                  />
-                  {workspace.name}
-                  {workspaceFilter === workspace.id && (
-                    <CheckCircle2 className="ml-auto h-4 w-4" />
-                  )}
-                </DropdownMenuItem>
-              ))}
-              
-              <DropdownMenuSeparator />
-              
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={() => {
-                  setStatusFilter(null);
-                  setWorkspaceFilter(null);
-                }}
-              >
-                Clear all filters
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <ArrowUpDown className="h-4 w-4" />
-                Sort
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem className="cursor-pointer">
-                Date created (newest)
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
-                Date created (oldest)
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
-                Due date (soonest)
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
-                Name (A-Z)
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
-                Progress (high-low)
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            New Project
-          </Button>
+          <CreateProjectModal />
         </div>
+      </div>
+
+      <ProjectSearch 
+        onFilterChange={setFilteredProjects} 
+      />
+      
+      <div className="flex justify-between items-center">
+        <div className="text-sm text-muted-foreground">
+          {filteredProjects.length} project{filteredProjects.length !== 1 && "s"} found
+        </div>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="gap-2">
+              <ArrowUpDown className="h-4 w-4" />
+              Sort
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem 
+              className="cursor-pointer"
+              onClick={() => setSortOption("favorite")}
+            >
+              Favorites first
+              {sortOption === "favorite" && <CheckCircle2 className="ml-auto h-4 w-4" />}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Due Date</DropdownMenuLabel>
+            <DropdownMenuItem 
+              className="cursor-pointer"
+              onClick={() => setSortOption("dueDate-asc")}
+            >
+              Earliest first
+              {sortOption === "dueDate-asc" && <CheckCircle2 className="ml-auto h-4 w-4" />}
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              className="cursor-pointer"
+              onClick={() => setSortOption("dueDate-desc")}
+            >
+              Latest first
+              {sortOption === "dueDate-desc" && <CheckCircle2 className="ml-auto h-4 w-4" />}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Name</DropdownMenuLabel>
+            <DropdownMenuItem 
+              className="cursor-pointer"
+              onClick={() => setSortOption("name-asc")}
+            >
+              A-Z
+              {sortOption === "name-asc" && <CheckCircle2 className="ml-auto h-4 w-4" />}
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              className="cursor-pointer"
+              onClick={() => setSortOption("name-desc")}
+            >
+              Z-A
+              {sortOption === "name-desc" && <CheckCircle2 className="ml-auto h-4 w-4" />}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Progress</DropdownMenuLabel>
+            <DropdownMenuItem 
+              className="cursor-pointer"
+              onClick={() => setSortOption("progress-asc")}
+            >
+              Lowest first
+              {sortOption === "progress-asc" && <CheckCircle2 className="ml-auto h-4 w-4" />}
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              className="cursor-pointer"
+              onClick={() => setSortOption("progress-desc")}
+            >
+              Highest first
+              {sortOption === "progress-desc" && <CheckCircle2 className="ml-auto h-4 w-4" />}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Created Date</DropdownMenuLabel>
+            <DropdownMenuItem 
+              className="cursor-pointer"
+              onClick={() => setSortOption("created-desc")}
+            >
+              Newest first
+              {sortOption === "created-desc" && <CheckCircle2 className="ml-auto h-4 w-4" />}
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              className="cursor-pointer"
+              onClick={() => setSortOption("created-asc")}
+            >
+              Oldest first
+              {sortOption === "created-asc" && <CheckCircle2 className="ml-auto h-4 w-4" />}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {sortedProjects.map((project) => {
-          const workspace = workspaces.find(
-            (w) => w.id === project.workspace
-          );
-          const completedTasks = project.tasks.filter(
-            (task) => task.status === "done"
-          ).length;
-          const totalTasks = project.tasks.length;
-
-          return (
-            <Card key={project.id} className="glass-card overflow-hidden">
-              <CardHeader className="pb-2 flex flex-row items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-1.5 mb-1">
-                    {workspace && (
-                      <Badge
-                        className="text-xs"
-                        style={{
-                          backgroundColor: workspace.color,
-                          color: "white",
-                        }}
-                      >
-                        {workspace.name}
-                      </Badge>
-                    )}
-                    <Badge
-                      variant="outline"
-                      className={`text-xs ${
-                        project.status === "active"
-                          ? "text-green-500 border-green-200"
-                          : project.status === "completed"
-                          ? "text-blue-500 border-blue-200"
-                          : "text-amber-500 border-amber-200"
-                      }`}
-                    >
-                      {project.status}
-                    </Badge>
-                  </div>
-                  <CardTitle className="text-lg font-semibold group">
-                    <Link
-                      to={`/projects/${project.id}`}
-                      className="hover:text-primary/80 transition-colors"
-                    >
-                      {project.name}
-                    </Link>
-                  </CardTitle>
-                  <CardDescription className="line-clamp-2 mt-1">
-                    {project.description}
-                  </CardDescription>
-                </div>
-                <div className="flex gap-1">
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      toggleFavorite(project.id);
-                    }}
-                    className="text-muted-foreground hover:text-amber-400 transition-colors"
-                  >
-                    {project.favorite ? (
-                      <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
-                    ) : (
-                      <StarOff className="h-5 w-5" />
-                    )}
-                  </button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="text-muted-foreground hover:text-foreground transition-colors">
-                        <MoreHorizontal className="h-5 w-5" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem className="cursor-pointer">
-                        <Link
-                          to={`/projects/${project.id}`}
-                          className="flex items-center w-full"
-                        >
-                          View project
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer">
-                        Edit project
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer">
-                        Duplicate project
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="cursor-pointer text-red-500">
-                        Delete project
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </CardHeader>
-              <CardContent className="pb-2">
-                <div className="flex flex-col gap-3">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Progress</span>
-                      <span>{project.progress}%</span>
-                    </div>
-                    <Progress value={project.progress} className="h-1.5" />
-                  </div>
-
-                  <div className="flex justify-between items-center text-sm">
-                    <div className="flex items-center">
-                      <Calendar className="h-4 w-4 mr-1.5 text-muted-foreground" />
-                      <span>
-                        {project.dueDate
-                          ? format(new Date(project.dueDate), "MMM d, yyyy")
-                          : "No due date"}
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <CheckCircle2 className="h-4 w-4 mr-1.5 text-green-500" />
-                      <span>
-                        {completedTasks}/{totalTasks} tasks
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="pt-0 pb-4">
-                <div className="w-full flex justify-between items-center mt-1">
-                  <div className="flex -space-x-2">
-                    {project.members.slice(0, 4).map((memberId, index) => (
-                      <Avatar key={index} className="border-2 border-background h-8 w-8">
-                        <AvatarImage
-                          src={`https://i.pravatar.cc/150?u=${memberId}`}
-                          alt={`Team member ${index + 1}`}
-                        />
-                        <AvatarFallback>
-                          {memberId.slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    ))}
-                    {project.members.length > 4 && (
-                      <div className="flex items-center justify-center h-8 w-8 rounded-full bg-secondary text-xs font-medium">
-                        +{project.members.length - 4}
+        {sortedProjects.length > 0 ? (
+          sortedProjects.map((project) => {
+            const workspace = workspaces.find((w) => w.id === project.workspace);
+            const timeStatus = getProjectTimeStatus(project);
+            
+            return (
+              <Link
+                to={`/projects/${project.id}`}
+                key={project.id}
+                className="group"
+              >
+                <Card className="h-full transition-all hover:shadow-md">
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1">
+                        <CardTitle className="flex items-center gap-2">
+                          <span className="line-clamp-1">{project.name}</span>
+                          {project.favorite && (
+                            <Star className="h-4 w-4 fill-amber-400 text-amber-400 flex-shrink-0" />
+                          )}
+                        </CardTitle>
+                        {workspace && (
+                          <Badge 
+                            variant="outline"
+                            className="text-xs"
+                            style={{ 
+                              backgroundColor: workspace.color, 
+                              color: "white", 
+                              borderColor: workspace.color 
+                            }}
+                          >
+                            {workspace.name}
+                          </Badge>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <Button size="sm" variant="outline" asChild>
-                    <Link to={`/projects/${project.id}`} className="gap-1.5">
-                      <Clock className="h-3.5 w-3.5" />
-                      View
-                    </Link>
-                  </Button>
-                </div>
-              </CardFooter>
-            </Card>
-          );
-        })}
-      </div>
-
-      {sortedProjects.length === 0 && (
-        <div className="text-center py-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-secondary/50 mb-4">
-            <Search className="h-8 w-8 text-muted-foreground" />
+                      <div className="flex items-center gap-2">
+                        {project.tags && project.tags.length > 0 && (
+                          <div className="flex items-center text-muted-foreground">
+                            <Tag className="h-3.5 w-3.5 mr-1" />
+                            <span className="text-xs">{project.tags.length}</span>
+                          </div>
+                        )}
+                        {project.members.length > 0 && (
+                          <div className="flex items-center text-muted-foreground">
+                            <Users className="h-3.5 w-3.5 mr-1" />
+                            <span className="text-xs">{project.members.length}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <CardDescription className="line-clamp-2">
+                      {project.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pb-2">
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span>Progress</span>
+                          <span>{project.progress}%</span>
+                        </div>
+                        <Progress value={project.progress} className="h-2" />
+                      </div>
+                      
+                      <div className="flex justify-between items-center text-sm">
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <Calendar className="h-4 w-4" />
+                          <span>
+                            {format(new Date(project.createdAt), "MMM d, yyyy")}
+                          </span>
+                        </div>
+                        
+                        {project.dueDate && (
+                          <div className="flex items-center gap-1.5">
+                            {timeStatus === "overdue" ? (
+                              <AlertTriangle className="h-4 w-4 text-destructive" />
+                            ) : timeStatus === "soon" ? (
+                              <Clock className="h-4 w-4 text-amber-500" />
+                            ) : (
+                              <Calendar className="h-4 w-4 text-muted-foreground" />
+                            )}
+                            <span className={timeStatus === "overdue" ? "text-destructive" : timeStatus === "soon" ? "text-amber-500" : "text-muted-foreground"}>
+                              {format(parseISO(project.dueDate), "MMM d, yyyy")}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <span>
+                            {project.tasks.length} task{project.tasks.length !== 1 && "s"}
+                          </span>
+                          {project.tasks.length > 0 && (
+                            <span>
+                              • {project.tasks.filter(t => t.status === "done").length} completed
+                            </span>
+                          )}
+                        </div>
+                        
+                        <Badge variant={project.status === "active" ? "default" : project.status === "completed" ? "success" : "outline"}>
+                          {project.status === "active" ? "Active" : 
+                           project.status === "completed" ? "Completed" : "On Hold"}
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="pt-0">
+                    <div className="flex -space-x-2">
+                      {project.members.slice(0, 5).map((memberId, index) => (
+                        <Avatar key={index} className="border-2 border-background h-7 w-7">
+                          <AvatarImage
+                            src={`https://i.pravatar.cc/150?u=${memberId}`}
+                            alt={`Team member ${index + 1}`}
+                          />
+                          <AvatarFallback className="text-xs">
+                            {memberId.slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      ))}
+                      {project.members.length > 5 && (
+                        <div className="flex items-center justify-center h-7 w-7 rounded-full bg-secondary text-xs font-medium border-2 border-background">
+                          +{project.members.length - 5}
+                        </div>
+                      )}
+                    </div>
+                  </CardFooter>
+                </Card>
+              </Link>
+            );
+          })
+        ) : (
+          <div className="col-span-full py-12 text-center">
+            <div className="mx-auto w-24 h-24 rounded-full bg-muted flex items-center justify-center mb-4">
+              <Search className="h-12 w-12 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-medium">No projects found</h3>
+            <p className="text-muted-foreground mt-1 mb-4">
+              Try adjusting your search or filter criteria
+            </p>
+            <CreateProjectModal 
+              trigger={
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create a new project
+                </Button>
+              }
+            />
           </div>
-          <h3 className="text-xl font-semibold">No projects found</h3>
-          <p className="text-muted-foreground mt-1">
-            {searchQuery || statusFilter || workspaceFilter
-              ? "Try adjusting your search or filters"
-              : "Create your first project to get started"}
-          </p>
-          <Button className="mt-4 gap-2">
-            <Plus className="h-4 w-4" />
-            New Project
-          </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

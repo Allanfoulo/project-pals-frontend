@@ -1,10 +1,10 @@
-
 import { useEffect, useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
+import { NotificationSystem } from "@/components/collaboration";
 
 const Layout = () => {
   const { isAuthenticated } = useAuth();
@@ -49,12 +49,12 @@ const Layout = () => {
         <Sidebar collapsed={sidebarCollapsed} />
         <div className="flex-1 flex flex-col overflow-hidden">
           <TopBar onToggleSidebar={toggleSidebar} />
-          <main className="flex-1 overflow-auto bg-secondary/30 p-6">
-            <div className="animate-fade-in">
+          <main className="flex-1 overflow-auto bg-secondary/30 p-2 sm:p-4 md:p-6">
+            <div className="animate-fade-in max-w-full">
               <Outlet />
             </div>
           </main>
-          <footer className="border-t bg-background p-4 text-center text-sm text-muted-foreground">
+          <footer className="border-t bg-background p-2 sm:p-4 text-center text-xs sm:text-sm text-muted-foreground">
             <p>TaskFlow &copy; {new Date().getFullYear()} - Project Management Made Simple</p>
           </footer>
         </div>

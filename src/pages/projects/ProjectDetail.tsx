@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useProjects } from "@/contexts/ProjectContext";
@@ -22,6 +21,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/use-toast";
 import BoardView from "@/components/projects/BoardView";
+import ProjectDashboard from "@/components/projects/ProjectDashboard";
+import ProjectTimeline from "@/components/projects/ProjectTimeline";
+import ProjectTags from "@/components/projects/ProjectTags";
+import TaskList from "@/components/tasks/TaskList";
+import CreateTaskModal from "@/components/tasks/CreateTaskModal";
+import CalendarView from "@/components/tasks/CalendarView";
+import { AnalyticsDashboard } from "@/components/analytics";
+import { ActivityFeed } from "@/components/collaboration";
+
 import {
   Calendar,
   LayoutGrid,
@@ -32,6 +40,12 @@ import {
   StarOff,
   Trash2,
   Users,
+  Tag as TagIcon,
+  BarChart,
+  Clock,
+  CheckSquare,
+  LineChart,
+  MessageSquare,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -46,7 +60,7 @@ const ProjectDetail = () => {
     toggleFavorite,
   } = useProjects();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("board");
+  const [activeTab, setActiveTab] = useState("dashboard");
 
   if (!projectId) {
     return <div>Project ID is missing</div>;
@@ -118,6 +132,7 @@ const ProjectDetail = () => {
               {workspace.name}
             </Badge>
           )}
+          <ProjectTags projectId={project.id} className="ml-2" />
         </div>
 
         <div className="flex items-center space-x-2">
@@ -200,79 +215,154 @@ const ProjectDetail = () => {
           <p className="text-sm text-muted-foreground">Tasks</p>
           <div className="mt-1 flex items-center justify-between">
             <span className="text-2xl font-bold">{totalTasks}</span>
-            <div className="text-sm">
-              <span className="text-green-500">{statusCounts.done}</span> /{" "}
-              {totalTasks}
-            </div>
+            <span className="text-sm text-muted-foreground">
+              {statusCounts.done} completed
+            </span>
           </div>
-          <div className="h-2 mt-2 bg-secondary rounded-full overflow-hidden">
+          <div className="grid grid-cols-5 gap-1 mt-2">
             <div
-              className="h-full bg-green-500"
+              className="h-1 rounded-l-full bg-purple-500"
               style={{
-                width: `${
-                  totalTasks > 0
-                    ? (statusCounts.done / totalTasks) * 100
-                    : 0
-                }%`,
+                width: `${(statusCounts.backlog / totalTasks) * 100}%`,
               }}
-            ></div>
+            />
+            <div
+              className="h-1 bg-blue-500"
+              style={{
+                width: `${(statusCounts.todo / totalTasks) * 100}%`,
+              }}
+            />
+            <div
+              className="h-1 bg-amber-500"
+              style={{
+                width: `${(statusCounts.inProgress / totalTasks) * 100}%`,
+              }}
+            />
+            <div
+              className="h-1 bg-orange-500"
+              style={{
+                width: `${(statusCounts.inReview / totalTasks) * 100}%`,
+              }}
+            />
+            <div
+              className="h-1 rounded-r-full bg-green-500"
+              style={{
+                width: `${(statusCounts.done / totalTasks) * 100}%`,
+              }}
+            />
           </div>
         </div>
 
         <div className="glass-card p-4 rounded-lg">
           <p className="text-sm text-muted-foreground">Due Date</p>
           <div className="mt-1 flex items-center">
-            <Calendar className="h-5 w-5 mr-2 text-muted-foreground" />
-            <span className="text-lg font-bold">
+            <span className="text-2xl font-bold">
               {project.dueDate
                 ? format(new Date(project.dueDate), "MMM d, yyyy")
-                : "No due date"}
+                : "Not set"}
             </span>
           </div>
+          {project.dueDate && (
+            <p className="text-xs text-muted-foreground mt-2">
+              {Math.ceil(
+                (new Date(project.dueDate).getTime() - new Date().getTime()) /
+                  (1000 * 60 * 60 * 24)
+              )}{" "}
+              days remaining
+            </p>
+          )}
         </div>
 
         <div className="glass-card p-4 rounded-lg">
-          <p className="text-sm text-muted-foreground">Status</p>
+          <p className="text-sm text-muted-foreground">Created</p>
           <div className="mt-1 flex items-center">
-            <span className="text-lg font-bold capitalize">
-              {project.status}
+            <span className="text-2xl font-bold">
+              {format(new Date(project.createdAt), "MMM d, yyyy")}
             </span>
           </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            {Math.ceil(
+              (new Date().getTime() - new Date(project.createdAt).getTime()) /
+                (1000 * 60 * 60 * 24)
+            )}{" "}
+            days ago
+          </p>
         </div>
       </div>
 
-      <div className="bg-white/75 backdrop-blur-sm rounded-lg shadow-sm border border-gray-100 flex-1 overflow-hidden flex flex-col">
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="flex-1 flex flex-col"
-        >
-          <div className="border-b px-6 py-3">
-            <TabsList className="grid w-max grid-cols-3">
-              <TabsTrigger value="board" className="flex items-center px-4">
-                <LayoutGrid className="h-4 w-4 mr-2" />
-                Board
-              </TabsTrigger>
-              <TabsTrigger value="list" className="flex items-center px-4">
-                <List className="h-4 w-4 mr-2" />
-                List
-              </TabsTrigger>
-              <TabsTrigger value="calendar" className="flex items-center px-4">
-                <Calendar className="h-4 w-4 mr-2" />
-                Calendar
-              </TabsTrigger>
-            </TabsList>
-          </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
+        <TabsList className="grid grid-cols-8 md:w-auto md:inline-flex overflow-x-auto tabs-list">
+          <TabsTrigger value="dashboard" className="flex items-center gap-2">
+            <BarChart className="h-4 w-4" />
+            <span className="hidden sm:inline">Dashboard</span>
+          </TabsTrigger>
+          <TabsTrigger value="board" className="flex items-center gap-2">
+            <LayoutGrid className="h-4 w-4" />
+            <span className="hidden sm:inline">Board</span>
+          </TabsTrigger>
+          <TabsTrigger value="timeline" className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            <span className="hidden sm:inline">Timeline</span>
+          </TabsTrigger>
+          <TabsTrigger value="list" className="flex items-center gap-2">
+            <List className="h-4 w-4" />
+            <span className="hidden sm:inline">List</span>
+          </TabsTrigger>
+          <TabsTrigger value="tasks" className="flex items-center gap-2">
+            <CheckSquare className="h-4 w-4" />
+            <span className="hidden sm:inline">Tasks</span>
+          </TabsTrigger>
+          <TabsTrigger value="calendar" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            <span className="hidden sm:inline">Calendar</span>
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <LineChart className="h-4 w-4" />
+            <span className="hidden sm:inline">Analytics</span>
+          </TabsTrigger>
+          <TabsTrigger value="activity" className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4" />
+            <span className="hidden sm:inline">Activity</span>
+          </TabsTrigger>
+        </TabsList>
 
-          <div className="flex-1 overflow-auto p-4">
-            <TabsContent value="board" className="h-full">
-              <BoardView projectId={project.id} />
-            </TabsContent>
-            <TabsContent value="list">List view content</TabsContent>
-            <TabsContent value="calendar">Calendar view content</TabsContent>
+        <TabsContent value="dashboard" className="flex-1 mt-6">
+          <ProjectDashboard projectId={project.id} />
+        </TabsContent>
+
+        <TabsContent value="board" className="flex-1 mt-6">
+          <div className="flex justify-end mb-4">
+            <CreateTaskModal projectId={project.id} />
           </div>
-        </Tabs>
-      </div>
+          <BoardView projectId={project.id} />
+        </TabsContent>
+
+        <TabsContent value="timeline" className="flex-1 mt-6">
+          <ProjectTimeline projectId={project.id} />
+        </TabsContent>
+
+        <TabsContent value="list" className="flex-1 mt-6">
+          <div className="text-center py-12 text-muted-foreground">
+            <p>List view coming soon</p>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="tasks" className="flex-1 mt-6">
+          <TaskList projectId={project.id} />
+        </TabsContent>
+        
+        <TabsContent value="calendar" className="flex-1 mt-6">
+          <CalendarView projectId={project.id} />
+        </TabsContent>
+        
+        <TabsContent value="analytics" className="flex-1 mt-6">
+          <AnalyticsDashboard projectId={project.id} />
+        </TabsContent>
+
+        <TabsContent value="activity" className="flex-1 mt-6">
+          <ActivityFeed projectId={project.id} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

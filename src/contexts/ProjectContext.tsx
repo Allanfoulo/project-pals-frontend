@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode } from "react";
 
 // Define our data types
@@ -15,6 +14,15 @@ export type Project = {
   workspace: string;
   favorite: boolean;
   color: string;
+  tags?: string[];
+  milestones?: Milestone[];
+};
+
+export type Milestone = {
+  id: string;
+  title: string;
+  date: string;
+  completed: boolean;
 };
 
 export type Task = {
@@ -64,6 +72,33 @@ const mockProjects: Project[] = [
     workspace: "w3",
     favorite: true,
     color: "#8b5cf6",
+    tags: ["design", "website", "ui/ux"],
+    milestones: [
+      {
+        id: "m1",
+        title: "Wireframes Approval",
+        date: "2023-07-15T00:00:00Z",
+        completed: true,
+      },
+      {
+        id: "m2",
+        title: "Design System Complete",
+        date: "2023-08-01T00:00:00Z",
+        completed: true,
+      },
+      {
+        id: "m3",
+        title: "Frontend Implementation",
+        date: "2023-08-30T00:00:00Z",
+        completed: false,
+      },
+      {
+        id: "m4",
+        title: "User Testing",
+        date: "2023-09-10T00:00:00Z",
+        completed: false,
+      },
+    ],
     tasks: [
       {
         id: "t1",
@@ -130,6 +165,27 @@ const mockProjects: Project[] = [
     workspace: "w1",
     favorite: false,
     color: "#4f46e5",
+    tags: ["marketing", "campaign", "q3"],
+    milestones: [
+      {
+        id: "m5",
+        title: "Campaign Strategy Approval",
+        date: "2023-07-15T00:00:00Z",
+        completed: true,
+      },
+      {
+        id: "m6",
+        title: "Content Creation Complete",
+        date: "2023-08-15T00:00:00Z",
+        completed: false,
+      },
+      {
+        id: "m7",
+        title: "Campaign Launch",
+        date: "2023-09-01T00:00:00Z",
+        completed: false,
+      },
+    ],
     tasks: [
       {
         id: "t4",
@@ -195,72 +251,104 @@ const mockProjects: Project[] = [
     workspace: "w4",
     favorite: true,
     color: "#f97316",
+    tags: ["mobile", "development", "ios", "android"],
+    milestones: [
+      {
+        id: "m8",
+        title: "Requirements Gathering",
+        date: "2023-06-01T00:00:00Z",
+        completed: true,
+      },
+      {
+        id: "m9",
+        title: "UI/UX Design Complete",
+        date: "2023-07-15T00:00:00Z",
+        completed: true,
+      },
+      {
+        id: "m10",
+        title: "Alpha Release",
+        date: "2023-09-15T00:00:00Z",
+        completed: false,
+      },
+      {
+        id: "m11",
+        title: "Beta Testing",
+        date: "2023-10-15T00:00:00Z",
+        completed: false,
+      },
+      {
+        id: "m12",
+        title: "App Store Submission",
+        date: "2023-11-15T00:00:00Z",
+        completed: false,
+      },
+    ],
     tasks: [
       {
         id: "t7",
         title: "Requirements gathering",
-        description: "Define app features and technical requirements",
+        description: "Define app requirements and user stories",
         status: "done",
         priority: "high",
         assigneeId: "user-5",
-        dueDate: "2023-05-31T00:00:00Z",
-        createdAt: "2023-05-12T09:20:00Z",
+        dueDate: "2023-06-01T00:00:00Z",
+        createdAt: "2023-05-15T09:30:00Z",
         tags: ["planning", "requirements"],
         subtasks: [
-          { id: "st18", title: "Stakeholder interviews", completed: true },
+          { id: "st18", title: "User interviews", completed: true },
           { id: "st19", title: "Feature prioritization", completed: true },
-          { id: "st20", title: "Technical specifications", completed: true },
         ],
         projectId: "p3",
       },
       {
         id: "t8",
         title: "UI/UX Design",
-        description: "Design user interface and experience for the mobile app",
-        status: "inProgress",
+        description: "Create app wireframes and high-fidelity designs",
+        status: "done",
         priority: "high",
         assigneeId: "user-2",
         dueDate: "2023-07-15T00:00:00Z",
-        createdAt: "2023-06-01T10:30:00Z",
+        createdAt: "2023-06-05T14:20:00Z",
         tags: ["design", "ui", "ux"],
         subtasks: [
-          { id: "st21", title: "User flow diagrams", completed: true },
-          { id: "st22", title: "UI wireframes", completed: true },
-          { id: "st23", title: "Interactive prototypes", completed: false },
+          { id: "st20", title: "Wireframes", completed: true },
+          { id: "st21", title: "UI design", completed: true },
+          { id: "st22", title: "Prototyping", completed: true },
         ],
         projectId: "p3",
       },
       {
         id: "t9",
         title: "iOS Development",
-        description: "Develop native iOS app using Swift",
-        status: "todo",
-        priority: "medium",
-        assigneeId: "user-6",
-        dueDate: "2023-09-30T00:00:00Z",
-        createdAt: "2023-06-15T13:45:00Z",
+        description: "Develop the iOS version of the app",
+        status: "inProgress",
+        priority: "high",
+        assigneeId: "user-3",
+        dueDate: "2023-09-15T00:00:00Z",
+        createdAt: "2023-07-20T11:00:00Z",
         tags: ["development", "ios", "swift"],
         subtasks: [
-          { id: "st24", title: "Set up project architecture", completed: false },
-          { id: "st25", title: "Implement core features", completed: false },
-          { id: "st26", title: "Integrate APIs", completed: false },
+          { id: "st23", title: "Set up project", completed: true },
+          { id: "st24", title: "Implement core features", completed: false },
+          { id: "st25", title: "Integrate APIs", completed: false },
         ],
         projectId: "p3",
       },
       {
         id: "t10",
         title: "Android Development",
-        description: "Develop native Android app using Kotlin",
-        status: "backlog",
-        priority: "medium",
-        assigneeId: "user-3",
-        dueDate: "2023-10-31T00:00:00Z",
-        createdAt: "2023-06-15T14:30:00Z",
+        description: "Develop the Android version of the app",
+        status: "inProgress",
+        priority: "high",
+        assigneeId: "user-6",
+        dueDate: "2023-09-15T00:00:00Z",
+        createdAt: "2023-07-20T11:30:00Z",
         tags: ["development", "android", "kotlin"],
         subtasks: [
-          { id: "st27", title: "Set up project architecture", completed: false },
-          { id: "st28", title: "Implement core features", completed: false },
-          { id: "st29", title: "Integrate APIs", completed: false },
+          { id: "st26", title: "Set up project", completed: true },
+          { id: "st27", title: "Implement core features", completed: false },
+          { id: "st28", title: "Integrate APIs", completed: false },
         ],
         projectId: "p3",
       },
@@ -281,6 +369,9 @@ interface ProjectContextType {
   updateTask: (id: string, task: Partial<Task>) => void;
   deleteTask: (id: string) => void;
   toggleFavorite: (id: string) => void;
+  addMilestone: (milestone: Partial<Milestone>) => void;
+  updateMilestone: (id: string, milestone: Partial<Milestone>) => void;
+  deleteMilestone: (id: string) => void;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -303,6 +394,8 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       workspace: project.workspace || workspaces[0].id,
       favorite: project.favorite || false,
       color: project.color || "#4f46e5",
+      tags: project.tags || [],
+      milestones: project.milestones || [],
     };
     setProjects([...projects, newProject]);
   };
@@ -385,6 +478,52 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
+  const addMilestone = (milestone: Partial<Milestone>) => {
+    if (!milestone.projectId) return;
+
+    const newMilestone: Milestone = {
+      id: `m${Math.floor(Math.random() * 1000)}`,
+      title: milestone.title || "New Milestone",
+      date: milestone.date || "",
+      completed: milestone.completed || false,
+    };
+
+    setProjects(
+      projects.map((project) => {
+        if (project.id === milestone.projectId) {
+          return {
+            ...project,
+            milestones: [...project.milestones, newMilestone],
+          };
+        }
+        return project;
+      })
+    );
+  };
+
+  const updateMilestone = (id: string, updatedFields: Partial<Milestone>) => {
+    setProjects(
+      projects.map((project) => {
+        const updatedMilestones = project.milestones.map((milestone) =>
+          milestone.id === id ? { ...milestone, ...updatedFields } : milestone
+        );
+        return {
+          ...project,
+          milestones: updatedMilestones,
+        };
+      })
+    );
+  };
+
+  const deleteMilestone = (id: string) => {
+    setProjects(
+      projects.map((project) => ({
+        ...project,
+        milestones: project.milestones.filter((milestone) => milestone.id !== id),
+      }))
+    );
+  };
+
   return (
     <ProjectContext.Provider
       value={{
@@ -399,6 +538,9 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         updateTask,
         deleteTask,
         toggleFavorite,
+        addMilestone,
+        updateMilestone,
+        deleteMilestone,
       }}
     >
       {children}

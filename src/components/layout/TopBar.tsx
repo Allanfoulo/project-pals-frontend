@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -11,8 +10,12 @@ import {
   LogOut,
   User,
   Settings as SettingsIcon,
+  FolderPlus,
+  ListTodo,
+  Layers,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProjects } from "@/contexts/ProjectContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +32,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "./ThemeToggle";
+import { NotificationSystem } from "@/components/collaboration";
+import CreateProjectModal from "@/components/projects/CreateProjectModal";
+import CreateTaskModal from "@/components/tasks/CreateTaskModal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { toast } from "@/components/ui/use-toast";
+import { v4 as uuidv4 } from "uuid";
 
 interface TopBarProps {
   onToggleSidebar: () => void;
@@ -36,12 +46,45 @@ interface TopBarProps {
 
 const TopBar = ({ onToggleSidebar }: TopBarProps) => {
   const { user, logout } = useAuth();
+  const { projects, addWorkspace } = useProjects();
   const navigate = useNavigate();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [isCreateWorkspaceOpen, setIsCreateWorkspaceOpen] = useState(false);
+  const [newWorkspaceName, setNewWorkspaceName] = useState("");
+  const [newWorkspaceColor, setNewWorkspaceColor] = useState("#4f46e5");
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
   const handleLogout = () => {
     logout();
     navigate("/auth/login");
+  };
+  
+  const handleCreateWorkspace = () => {
+    if (!newWorkspaceName.trim()) {
+      toast({
+        title: "Workspace name required",
+        description: "Please enter a name for your workspace",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const newWorkspace = {
+      id: uuidv4(),
+      name: newWorkspaceName,
+      color: newWorkspaceColor,
+      createdAt: new Date().toISOString(),
+    };
+    
+    addWorkspace(newWorkspace);
+    setNewWorkspaceName("");
+    setNewWorkspaceColor("#4f46e5");
+    setIsCreateWorkspaceOpen(false);
+    
+    toast({
+      title: "Workspace created",
+      description: `${newWorkspaceName} has been created successfully`,
+    });
   };
 
   return (
@@ -93,6 +136,7 @@ const TopBar = ({ onToggleSidebar }: TopBarProps) => {
               variant="outline"
               size="sm"
               className="flex items-center gap-2"
+              data-component-name="_c"
             >
               <Plus size={16} />
               <span>Create</span>
@@ -101,23 +145,127 @@ const TopBar = ({ onToggleSidebar }: TopBarProps) => {
           </PopoverTrigger>
           <PopoverContent className="w-56" align="end">
             <div className="space-y-1">
-              <button className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-secondary transition-colors">
-                New Project
-              </button>
-              <button className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-secondary transition-colors">
-                New Task
-              </button>
-              <button className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-secondary transition-colors">
-                New Workspace
-              </button>
+              <CreateProjectModal
+                trigger={
+                  <button className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-secondary transition-colors flex items-center gap-2">
+                    <FolderPlus size={16} />
+                    New Project
+                  </button>
+                }
+                onSuccess={() => {
+                  toast({
+                    title: "Project created",
+                    description: "Your new project has been created successfully",
+                  });
+                  navigate('/projects');
+                }}
+              />
+              
+              {projects.length > 0 ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-secondary transition-colors flex items-center gap-2 justify-between">
+                      <div className="flex items-center gap-2">
+                        <ListTodo size={16} />
+                        New Task
+                      </div>
+                      <ChevronDown size={14} />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end">
+                    <DropdownMenuLabel>Select Project</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {projects.map(project => (
+                      <DropdownMenuItem
+                        key={project.id}
+                        onClick={() => setSelectedProjectId(project.id)}
+                        className="cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="h-2 w-2 rounded-full"
+                            style={{ backgroundColor: project.color }}
+                          />
+                          {project.name}
+                        </div>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <button 
+                  className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-secondary transition-colors flex items-center gap-2 opacity-50"
+                  onClick={() => toast({
+                    title: "No projects available",
+                    description: "Create a project first before adding tasks",
+                    variant: "destructive",
+                  })}
+                >
+                  <ListTodo size={16} />
+                  New Task
+                </button>
+              )}
+              
+              {selectedProjectId && (
+                <CreateTaskModal
+                  projectId={selectedProjectId}
+                  trigger={<span className="hidden" />}
+                />
+              )}
+              
+              <Dialog open={isCreateWorkspaceOpen} onOpenChange={setIsCreateWorkspaceOpen}>
+                <DialogTrigger asChild>
+                  <button className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-secondary transition-colors flex items-center gap-2">
+                    <Layers size={16} />
+                    New Workspace
+                  </button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Create New Workspace</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="workspaceName">Workspace Name</Label>
+                      <Input
+                        id="workspaceName"
+                        value={newWorkspaceName}
+                        onChange={(e) => setNewWorkspaceName(e.target.value)}
+                        placeholder="Enter workspace name"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="workspaceColor">Color</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="color"
+                          id="workspaceColor"
+                          value={newWorkspaceColor}
+                          onChange={(e) => setNewWorkspaceColor(e.target.value)}
+                          className="w-12 h-8 p-1"
+                        />
+                        <div 
+                          className="w-8 h-8 rounded-full border"
+                          style={{ backgroundColor: newWorkspaceColor }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsCreateWorkspaceOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleCreateWorkspace}>
+                      Create Workspace
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </PopoverContent>
         </Popover>
 
-        <button className="p-2 rounded-md hover:bg-secondary/50 transition-colors relative">
-          <Bell size={20} />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-        </button>
+        <NotificationSystem />
 
         {user && (
           <DropdownMenu>

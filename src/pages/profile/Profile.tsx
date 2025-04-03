@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { 
@@ -14,19 +14,22 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   UserRound, 
   Mail, 
   Briefcase, 
   Calendar, 
   Save,
-  Lock
+  Lock,
+  Loader2
 } from "lucide-react";
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   
-  const [formData, setFormData] = useState({
+  // Initialize profile data with user data or defaults
+  const [profileData, setProfileData] = useState({
     name: user?.name || "",
     email: user?.email || "",
     role: user?.role || "",
@@ -35,15 +38,70 @@ const Profile = () => {
     location: "San Francisco, CA",
     joinDate: "January 2022",
   });
+  
+  // Keep a separate copy for the form to track changes
+  const [formData, setFormData] = useState({...profileData});
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => {
-    // This would normally update the user profile in a real backend
-    toast.success("Profile updated successfully");
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  // Check if form data has changed from profile data
+  useEffect(() => {
+    const hasAnyChanges = Object.keys(formData).some(
+      key => formData[key as keyof typeof formData] !== profileData[key as keyof typeof profileData]
+    );
+    
+    setHasChanges(hasAnyChanges);
+  }, [formData, profileData]);
+
+  const handleSave = async () => {
+    if (!hasChanges) {
+      toast.info("No changes to save");
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      // Simulate API call with a timeout
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // In a real application, you would update the user profile in the backend
+      // const response = await fetch('/api/profile', {
+      //   method: 'PUT',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(formData)
+      // });
+      
+      // if (!response.ok) throw new Error('Failed to update profile');
+      
+      // Update the profile data with form data
+      setProfileData({...formData});
+      
+      // Update user context with new data (if this were a real app)
+      if (updateUser) {
+        updateUser({
+          ...user,
+          name: formData.name,
+          email: formData.email,
+          role: formData.role,
+          avatarUrl: formData.avatar
+        });
+      }
+      
+      toast.success("Profile updated successfully");
+      setHasChanges(false);
+    } catch (error) {
+      toast.error("Failed to update profile. Please try again.");
+      console.error("Profile update error:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -62,25 +120,25 @@ const Profile = () => {
           </CardHeader>
           <CardContent className="flex flex-col items-center space-y-4">
             <Avatar className="h-24 w-24">
-              <AvatarImage src={formData.avatar} alt={formData.name} />
-              <AvatarFallback>{formData.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+              <AvatarImage src={profileData.avatar} alt={profileData.name} />
+              <AvatarFallback>{profileData.name.substring(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="text-center">
-              <h3 className="font-medium text-lg">{formData.name}</h3>
-              <p className="text-sm text-muted-foreground">{formData.role}</p>
+              <h3 className="font-medium text-lg">{profileData.name}</h3>
+              <p className="text-sm text-muted-foreground">{profileData.role}</p>
             </div>
             <div className="w-full space-y-2">
               <div className="flex items-center text-sm">
                 <Mail className="mr-2 h-4 w-4 text-muted-foreground" />
-                <span>{formData.email}</span>
+                <span>{profileData.email}</span>
               </div>
               <div className="flex items-center text-sm">
                 <Briefcase className="mr-2 h-4 w-4 text-muted-foreground" />
-                <span>{formData.role}</span>
+                <span>{profileData.role}</span>
               </div>
               <div className="flex items-center text-sm">
                 <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                <span>Joined {formData.joinDate}</span>
+                <span>Joined {profileData.joinDate}</span>
               </div>
             </div>
             <Button 
@@ -154,11 +212,12 @@ const Profile = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="bio">Bio</Label>
-                <Input 
+                <Textarea 
                   id="bio"
                   name="bio"
                   value={formData.bio}
                   onChange={handleInputChange}
+                  className="min-h-[100px]"
                 />
               </div>
               <div className="space-y-2">
@@ -173,9 +232,17 @@ const Profile = () => {
             </form>
           </CardContent>
           <CardFooter className="flex justify-end">
-            <Button onClick={handleSave}>
-              <Save className="mr-2 h-4 w-4" />
-              Save Changes
+            <Button 
+              onClick={handleSave} 
+              disabled={isLoading || !hasChanges}
+              className={!hasChanges ? "opacity-70" : ""}
+            >
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              {isLoading ? "Saving..." : "Save Changes"}
             </Button>
           </CardFooter>
         </Card>

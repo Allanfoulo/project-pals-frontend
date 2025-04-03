@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,21 +11,36 @@ import {
   AlertTriangle, 
   Clock, 
   CheckCircle2,
-  Filter 
+  Filter,
+  Calendar,
+  LayoutGrid,
+  List as ListIcon
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useProjects } from "@/contexts/ProjectContext";
 import { Task } from "@/contexts/ProjectContext";
+import TaskItem from "@/components/tasks/TaskItem";
+import CreateTaskModal from "@/components/tasks/CreateTaskModal";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { format, isPast, isToday } from "date-fns";
 
 const Tasks = () => {
-  const { projects } = useProjects();
+  const { projects, updateTask } = useProjects();
   const [filter, setFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [viewMode, setViewMode] = useState<"list" | "board" | "calendar">("list");
+  const [sortBy, setSortBy] = useState<"priority" | "dueDate" | "status">("priority");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
   // Get all tasks from all projects
   const allTasks = projects.reduce((acc, project) => {
-    return [...acc, ...project.tasks.map(task => ({...task, projectName: project.name}))];
-  }, [] as (Task & {projectName: string})[]);
+    return [...acc, ...project.tasks.map(task => ({...task, projectName: project.name, projectId: project.id}))]; 
+  }, [] as (Task & {projectName: string, projectId: string})[]);
 
   // Filter and search tasks
   const filteredTasks = allTasks.filter(task => {
@@ -43,11 +57,33 @@ const Tasks = () => {
     return true;
   });
 
+  // Sort tasks
+  const sortedTasks = [...filteredTasks].sort((a, b) => {
+    if (sortBy === "priority") {
+      const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
+      const priorityA = priorityOrder[a.priority as keyof typeof priorityOrder] || 4;
+      const priorityB = priorityOrder[b.priority as keyof typeof priorityOrder] || 4;
+      return sortDirection === "asc" ? priorityA - priorityB : priorityB - priorityA;
+    } else if (sortBy === "dueDate") {
+      if (!a.dueDate) return sortDirection === "asc" ? 1 : -1;
+      if (!b.dueDate) return sortDirection === "asc" ? -1 : 1;
+      return sortDirection === "asc" 
+        ? new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+        : new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
+    } else if (sortBy === "status") {
+      const statusOrder = { backlog: 0, todo: 1, inProgress: 2, inReview: 3, done: 4 };
+      const statusA = statusOrder[a.status as keyof typeof statusOrder] || 0;
+      const statusB = statusOrder[b.status as keyof typeof statusOrder] || 0;
+      return sortDirection === "asc" ? statusA - statusB : statusB - statusA;
+    }
+    return 0;
+  });
+
   // Group tasks by priority
-  const urgentTasks = filteredTasks.filter(task => task.priority === "urgent");
-  const highTasks = filteredTasks.filter(task => task.priority === "high");
-  const mediumTasks = filteredTasks.filter(task => task.priority === "medium");
-  const lowTasks = filteredTasks.filter(task => task.priority === "low");
+  const urgentTasks = sortedTasks.filter(task => task.priority === "urgent");
+  const highTasks = sortedTasks.filter(task => task.priority === "high");
+  const mediumTasks = sortedTasks.filter(task => task.priority === "medium");
+  const lowTasks = sortedTasks.filter(task => task.priority === "low");
 
   // Get task count by status
   const tasksByStatus = {
@@ -58,69 +94,14 @@ const Tasks = () => {
     done: allTasks.filter(t => t.status === "done").length,
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch(priority) {
-      case "urgent": return "text-red-500 bg-red-100 dark:bg-red-900/20";
-      case "high": return "text-orange-500 bg-orange-100 dark:bg-orange-900/20";
-      case "medium": return "text-blue-500 bg-blue-100 dark:bg-blue-900/20";
-      case "low": return "text-green-500 bg-green-100 dark:bg-green-900/20";
-      default: return "text-gray-500 bg-gray-100 dark:bg-gray-900/20";
-    }
+  // Toggle sort direction
+  const toggleSortDirection = () => {
+    setSortDirection(sortDirection === "asc" ? "desc" : "asc");
   };
 
-  const getStatusIcon = (status: string) => {
-    switch(status) {
-      case "backlog": return <Clock className="h-4 w-4 text-gray-500" />;
-      case "todo": return <Clock className="h-4 w-4 text-blue-500" />;
-      case "inProgress": return <Clock className="h-4 w-4 text-orange-500" />;
-      case "inReview": return <Clock className="h-4 w-4 text-purple-500" />;
-      case "done": return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-      default: return <Clock className="h-4 w-4 text-gray-500" />;
-    }
+  const handleTaskStatusChange = (taskId: string, completed: boolean) => {
+    updateTask(taskId, { status: completed ? "done" : "todo" });
   };
-
-  const TaskItem = ({ task }: { task: Task & {projectName: string} }) => (
-    <div className="p-4 border rounded-lg hover:bg-secondary transition-colors">
-      <div className="flex items-start justify-between">
-        <div className="flex items-start gap-3">
-          <Checkbox id={`task-${task.id}`} />
-          <div>
-            <label
-              htmlFor={`task-${task.id}`}
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              {task.title}
-            </label>
-            <p className="text-sm text-muted-foreground mt-1">
-              {task.description.length > 100 
-                ? `${task.description.substring(0, 100)}...` 
-                : task.description}
-            </p>
-            <div className="flex items-center gap-2 mt-2">
-              <Badge variant="outline" className="text-xs">
-                {task.projectName}
-              </Badge>
-              <Badge 
-                variant="secondary" 
-                className={`text-xs ${getPriorityColor(task.priority)}`}
-              >
-                {task.priority}
-              </Badge>
-              <div className="flex items-center text-xs text-muted-foreground">
-                {getStatusIcon(task.status)} 
-                <span className="ml-1">{task.status}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        {task.dueDate && (
-          <Badge variant="outline" className="text-xs">
-            Due: {new Date(task.dueDate).toLocaleDateString()}
-          </Badge>
-        )}
-      </div>
-    </div>
-  );
 
   return (
     <div className="space-y-6">
@@ -137,13 +118,65 @@ const Tasks = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button variant="outline" size="icon">
-            <Filter className="h-4 w-4" />
-          </Button>
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Task
-          </Button>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Filter className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setSortBy("priority")}>
+                Sort by Priority
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortBy("dueDate")}>
+                Sort by Due Date
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortBy("status")}>
+                Sort by Status
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={toggleSortDirection}>
+                {sortDirection === "asc" ? "Ascending" : "Descending"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <div className="flex rounded-md border">
+            <Button 
+              variant={viewMode === "list" ? "default" : "ghost"} 
+              size="icon" 
+              className="rounded-none rounded-l-md" 
+              onClick={() => setViewMode("list")}
+            >
+              <ListIcon className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant={viewMode === "board" ? "default" : "ghost"} 
+              size="icon" 
+              className="rounded-none" 
+              onClick={() => setViewMode("board")}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant={viewMode === "calendar" ? "default" : "ghost"} 
+              size="icon" 
+              className="rounded-none rounded-r-md" 
+              onClick={() => setViewMode("calendar")}
+            >
+              <Calendar className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          <CreateTaskModal 
+            projectId={projects.length > 0 ? projects[0].id : ""} 
+            trigger={
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Task
+              </Button>
+            }
+          />
         </div>
       </div>
 
@@ -195,8 +228,8 @@ const Tasks = () => {
         </Card>
       </div>
 
-      <Tabs defaultValue="all" onValueChange={setFilter}>
-        <TabsList>
+      <Tabs defaultValue="all" onValueChange={setFilter} className="tabs-list">
+        <TabsList className="overflow-x-auto">
           <TabsTrigger value="all">All Tasks</TabsTrigger>
           <TabsTrigger value="todo">To Do</TabsTrigger>
           <TabsTrigger value="inProgress">In Progress</TabsTrigger>
@@ -204,7 +237,7 @@ const Tasks = () => {
           <TabsTrigger value="done">Done</TabsTrigger>
         </TabsList>
         <TabsContent value="all" className="mt-4">
-          {filteredTasks.length > 0 ? (
+          {sortedTasks.length > 0 ? (
             <div className="space-y-4">
               {urgentTasks.length > 0 && (
                 <div>
@@ -262,8 +295,8 @@ const Tasks = () => {
         {["todo", "inProgress", "inReview", "done"].map(status => (
           <TabsContent key={status} value={status} className="mt-4">
             <div className="space-y-2">
-              {filteredTasks.filter(task => task.status === status).length > 0 ? (
-                filteredTasks
+              {sortedTasks.filter(task => task.status === status).length > 0 ? (
+                sortedTasks
                   .filter(task => task.status === status)
                   .map(task => <TaskItem key={task.id} task={task} />)
               ) : (
