@@ -36,37 +36,37 @@ const NotificationsPage = () => {
   const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([]);
   const [activeFilter, setActiveFilter] = useState<NotificationType>("all");
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Generate mock notifications
   useEffect(() => {
     const mockNotifications = generateMockNotifications();
     setNotifications(mockNotifications);
     setFilteredNotifications(mockNotifications);
   }, [projects]);
-  
+
   // Filter notifications when filter or search changes
   useEffect(() => {
     let filtered = [...notifications];
-    
+
     // Apply type filter
     if (activeFilter !== "all") {
       filtered = filtered.filter(n => n.type === activeFilter);
     }
-    
+
     // Apply search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(n => 
-        n.title.toLowerCase().includes(query) || 
+      filtered = filtered.filter(n =>
+        n.title.toLowerCase().includes(query) ||
         n.message.toLowerCase().includes(query) ||
         (n.projectName && n.projectName.toLowerCase().includes(query)) ||
         (n.taskName && n.taskName.toLowerCase().includes(query))
       );
     }
-    
+
     setFilteredNotifications(filtered);
   }, [activeFilter, searchQuery, notifications]);
-  
+
   const generateMockNotifications = () => {
     if (projects.length === 0) {
       // Create some default notifications if no projects
@@ -74,7 +74,7 @@ const NotificationsPage = () => {
         {
           id: "1",
           type: "system" as NotificationType,
-          title: "Welcome to Project Pals",
+          title: "Welcome to TaskFlow",
           message: "Thanks for joining! Start by creating your first project.",
           read: false,
           timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
@@ -89,9 +89,9 @@ const NotificationsPage = () => {
         },
       ];
     }
-    
+
     const mockNotifications: Notification[] = [];
-    
+
     // Generate notifications based on projects and tasks
     projects.forEach(project => {
       // Project deadline approaching
@@ -108,7 +108,7 @@ const NotificationsPage = () => {
           link: `/projects/${project.id}`
         });
       }
-      
+
       // Task notifications
       project.tasks.forEach(task => {
         // Task assignment
@@ -127,7 +127,7 @@ const NotificationsPage = () => {
             link: `/projects/${project.id}?task=${task.id}`
           });
         }
-        
+
         // Task mentions (random)
         if (Math.random() > 0.7) {
           mockNotifications.push({
@@ -147,7 +147,7 @@ const NotificationsPage = () => {
             link: `/projects/${project.id}?task=${task.id}`
           });
         }
-        
+
         // Task comments (random)
         if (Math.random() > 0.6) {
           mockNotifications.push({
@@ -167,7 +167,7 @@ const NotificationsPage = () => {
             link: `/projects/${project.id}?task=${task.id}`
           });
         }
-        
+
         // Task status changes (random)
         if (Math.random() > 0.6) {
           mockNotifications.push({
@@ -186,7 +186,7 @@ const NotificationsPage = () => {
         }
       });
     });
-    
+
     // Add some system notifications
     mockNotifications.push({
       id: "system-1",
@@ -196,25 +196,25 @@ const NotificationsPage = () => {
       read: false,
       timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
     });
-    
+
     // Sort by timestamp (newest first)
-    return mockNotifications.sort((a, b) => 
+    return mockNotifications.sort((a, b) =>
       new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
   };
-  
+
   const markAsRead = (id: string) => {
-    setNotifications(prev => 
+    setNotifications(prev =>
       prev.map(n => n.id === id ? { ...n, read: true } : n)
     );
   };
-  
+
   const markAllAsRead = () => {
-    setNotifications(prev => 
+    setNotifications(prev =>
       prev.map(n => ({ ...n, read: true }))
     );
   };
-  
+
   const getNotificationIcon = (type: NotificationType) => {
     switch (type) {
       case "mention":
@@ -238,16 +238,16 @@ const NotificationsPage = () => {
   const formatRelativeTime = (date: Date | string) => {
     return formatDistance(new Date(date), new Date(), { addSuffix: true });
   };
-  
+
   const getFilterCount = (type: NotificationType) => {
     if (type === "all") return notifications.length;
     return notifications.filter(n => n.type === type).length;
   };
-  
+
   const getUnreadCount = () => {
     return notifications.filter(n => !n.read).length;
   };
-  
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -263,9 +263,9 @@ const NotificationsPage = () => {
           </Button>
         </div>
       </div>
-      
+
       <Separator />
-      
+
       <div className="flex flex-col md:flex-row gap-6">
         <div className="md:w-64 space-y-4">
           <Card>
@@ -283,7 +283,7 @@ const NotificationsPage = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              
+
               <div className="space-y-1 pt-2">
                 <Button
                   variant={activeFilter === "all" ? "default" : "ghost"}
@@ -294,7 +294,7 @@ const NotificationsPage = () => {
                   All Notifications
                   <Badge className="ml-auto" variant="secondary">{getFilterCount("all")}</Badge>
                 </Button>
-                
+
                 <Button
                   variant={activeFilter === "mention" ? "default" : "ghost"}
                   className="w-full justify-start"
@@ -304,7 +304,7 @@ const NotificationsPage = () => {
                   Mentions
                   <Badge className="ml-auto" variant="secondary">{getFilterCount("mention")}</Badge>
                 </Button>
-                
+
                 <Button
                   variant={activeFilter === "comment" ? "default" : "ghost"}
                   className="w-full justify-start"
@@ -314,7 +314,7 @@ const NotificationsPage = () => {
                   Comments
                   <Badge className="ml-auto" variant="secondary">{getFilterCount("comment")}</Badge>
                 </Button>
-                
+
                 <Button
                   variant={activeFilter === "assignment" ? "default" : "ghost"}
                   className="w-full justify-start"
@@ -324,7 +324,7 @@ const NotificationsPage = () => {
                   Assignments
                   <Badge className="ml-auto" variant="secondary">{getFilterCount("assignment")}</Badge>
                 </Button>
-                
+
                 <Button
                   variant={activeFilter === "deadline" ? "default" : "ghost"}
                   className="w-full justify-start"
@@ -334,7 +334,7 @@ const NotificationsPage = () => {
                   Deadlines
                   <Badge className="ml-auto" variant="secondary">{getFilterCount("deadline")}</Badge>
                 </Button>
-                
+
                 <Button
                   variant={activeFilter === "status" ? "default" : "ghost"}
                   className="w-full justify-start"
@@ -344,7 +344,7 @@ const NotificationsPage = () => {
                   Status Updates
                   <Badge className="ml-auto" variant="secondary">{getFilterCount("status")}</Badge>
                 </Button>
-                
+
                 <Button
                   variant={activeFilter === "system" ? "default" : "ghost"}
                   className="w-full justify-start"
@@ -358,7 +358,7 @@ const NotificationsPage = () => {
             </CardContent>
           </Card>
         </div>
-        
+
         <div className="flex-1 space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">
@@ -375,12 +375,12 @@ const NotificationsPage = () => {
               </SelectContent>
             </Select>
           </div>
-          
+
           {filteredNotifications.length > 0 ? (
             <div className="space-y-3">
               {filteredNotifications.map(notification => (
-                <Card 
-                  key={notification.id} 
+                <Card
+                  key={notification.id}
                   className={`${!notification.read ? 'border-l-4 border-l-primary' : ''}`}
                 >
                   <CardContent className="p-4">
@@ -396,7 +396,7 @@ const NotificationsPage = () => {
                           </span>
                         </div>
                         <p className="text-sm text-muted-foreground">{notification.message}</p>
-                        
+
                         <div className="flex flex-wrap gap-2 pt-1">
                           {notification.projectName && (
                             <Badge variant="outline">
@@ -409,7 +409,7 @@ const NotificationsPage = () => {
                             </Badge>
                           )}
                         </div>
-                        
+
                         <div className="flex items-center justify-between pt-2">
                           {notification.link && (
                             <Button variant="link" size="sm" className="px-0" asChild>
@@ -417,8 +417,8 @@ const NotificationsPage = () => {
                             </Button>
                           )}
                           {!notification.read && (
-                            <Button 
-                              variant="ghost" 
+                            <Button
+                              variant="ghost"
                               size="sm"
                               onClick={() => markAsRead(notification.id)}
                             >

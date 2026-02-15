@@ -77,7 +77,7 @@ const defaultDarkTheme: CustomTheme = {
 };
 
 const defaultBranding: BrandingOptions = {
-  companyName: "Project Pals",
+  companyName: "TaskFlow",
   logoUrl: "/logo.svg",
   favicon: "/favicon.ico",
   accentColor: "#0ea5e9"
@@ -92,22 +92,22 @@ export function ThemeProvider({
   const [theme, setTheme] = useState<Theme>(
     () => (localStorage.getItem("theme") as Theme) || defaultTheme
   );
-  
+
   const [customTheme, setCustomThemeState] = useState<CustomTheme | null>(() => {
     const savedTheme = localStorage.getItem("customTheme");
     return savedTheme ? JSON.parse(savedTheme) : null;
   });
-  
+
   const [branding, setBrandingState] = useState<BrandingOptions>(() => {
     const savedBranding = localStorage.getItem("branding");
     return savedBranding ? JSON.parse(savedBranding) : defaultBranding;
   });
-  
+
   const [availableThemes, setAvailableThemes] = useState<CustomTheme[]>(() => {
     const savedThemes = localStorage.getItem("availableThemes");
     return savedThemes ? JSON.parse(savedThemes) : [defaultLightTheme, defaultDarkTheme];
   });
-  
+
   const setCustomTheme = (newTheme: CustomTheme) => {
     setCustomThemeState(newTheme);
     localStorage.setItem("customTheme", JSON.stringify(newTheme));
@@ -118,13 +118,13 @@ export function ThemeProvider({
       applyThemeProperties(newTheme);
     }
   };
-  
+
   const setBranding = (options: BrandingOptions) => {
     setBrandingState(options);
     localStorage.setItem("branding", JSON.stringify(options));
     applyBrandingProperties(options);
   };
-  
+
   const addCustomTheme = (newTheme: CustomTheme) => {
     setAvailableThemes(prev => {
       // Replace if theme with same name exists, otherwise add
@@ -137,27 +137,27 @@ export function ThemeProvider({
       return [...prev, newTheme];
     });
   };
-  
+
   const deleteCustomTheme = (themeName: string) => {
     setAvailableThemes(prev => prev.filter(t => t.name !== themeName));
-    
+
     // If the deleted theme was the active custom theme, reset to default
     if (customTheme?.name === themeName) {
       resetToDefaultTheme();
     }
   };
-  
+
   const resetToDefaultTheme = () => {
     setCustomThemeState(null);
     localStorage.removeItem("customTheme");
     setTheme("system");
   };
-  
+
   // Apply theme CSS variables to document root
   const applyThemeProperties = (themeToApply: CustomTheme) => {
     const root = document.documentElement;
     const colors = themeToApply.colors;
-    
+
     root.style.setProperty("--primary", colors.primary);
     root.style.setProperty("--primary-foreground", themeToApply.isDark ? "#ffffff" : "#ffffff");
     root.style.setProperty("--secondary", colors.secondary);
@@ -173,7 +173,7 @@ export function ThemeProvider({
     root.style.setProperty("--card", colors.background);
     root.style.setProperty("--card-foreground", colors.foreground);
   };
-  
+
   // Apply branding properties
   const applyBrandingProperties = (options: BrandingOptions) => {
     // Update favicon
@@ -181,10 +181,10 @@ export function ThemeProvider({
     if (favicon) {
       favicon.href = options.favicon;
     }
-    
+
     // Set accent color as CSS variable
     document.documentElement.style.setProperty("--brand-color", options.accentColor);
-    
+
     // Update page title
     document.title = options.companyName + " | Project Management App";
   };
@@ -203,7 +203,7 @@ export function ThemeProvider({
       applyThemeProperties(customTheme);
       return;
     }
-    
+
     if (theme === "system") {
       const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
         .matches
@@ -216,17 +216,17 @@ export function ThemeProvider({
     root.classList.add(theme);
     localStorage.setItem("theme", theme);
   }, [theme, customTheme]);
-  
+
   // Apply branding on initial load
   useEffect(() => {
     applyBrandingProperties(branding);
   }, [branding]);
 
   return (
-    <ThemeContext.Provider value={{ 
-      theme, 
-      setTheme, 
-      customTheme, 
+    <ThemeContext.Provider value={{
+      theme,
+      setTheme,
+      customTheme,
       setCustomTheme,
       branding,
       setBranding,

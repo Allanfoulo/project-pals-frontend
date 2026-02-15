@@ -1,25 +1,26 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  UserRound, 
-  Mail, 
-  Briefcase, 
-  Calendar, 
+import {
+  UserRound,
+  Mail,
+  Briefcase,
+  Calendar,
   Save,
   Lock,
   Loader2
@@ -27,77 +28,93 @@ import {
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
-  
-  // Initialize profile data with user data or defaults
   const [profileData, setProfileData] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    role: user?.role || "",
-    avatar: user?.avatarUrl || "",
-    bio: "Product manager with 5+ years of experience in SaaS products.",
-    location: "San Francisco, CA",
-    joinDate: "January 2022",
+    name: "",
+    email: "",
+    role: "",
+    avatar: "",
+    bio: "",
+    location: "",
+    joinDate: "",
   });
-  
-  // Keep a separate copy for the form to track changes
-  const [formData, setFormData] = useState({...profileData});
+  const [formData, setFormData] = useState({ ...profileData });
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  // Fetch profile data
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return;
+      }
+
+      if (data) {
+        const newData = {
+          name: data.full_name || user.name || "",
+          email: user.email || "",
+          role: user.role || "",
+          avatar: data.avatar_url || user.avatarUrl || "",
+          bio: data.bio || "",
+          location: data.location || "",
+          joinDate: new Date(data.updated_at || new Date()).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        };
+        setProfileData(newData);
+        setFormData(newData);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
-
-  // Check if form data has changed from profile data
   useEffect(() => {
     const hasAnyChanges = Object.keys(formData).some(
       key => formData[key as keyof typeof formData] !== profileData[key as keyof typeof profileData]
     );
-    
     setHasChanges(hasAnyChanges);
   }, [formData, profileData]);
 
   const handleSave = async () => {
-    if (!hasChanges) {
-      toast.info("No changes to save");
-      return;
-    }
+    if (!hasChanges || !user) return;
 
     setIsLoading(true);
-    
+
     try {
-      // Simulate API call with a timeout
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // In a real application, you would update the user profile in the backend
-      // const response = await fetch('/api/profile', {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(formData)
-      // });
-      
-      // if (!response.ok) throw new Error('Failed to update profile');
-      
-      // Update the profile data with form data
-      setProfileData({...formData});
-      
-      // Update user context with new data (if this were a real app)
-      if (updateUser) {
-        updateUser({
-          ...user,
-          name: formData.name,
-          email: formData.email,
-          role: formData.role,
-          avatarUrl: formData.avatar
-        });
-      }
-      
+      const updates = {
+        id: user.id,
+        full_name: formData.name,
+        avatar_url: formData.avatar,
+        bio: formData.bio,
+        location: formData.location,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase.from('profiles').upsert(updates);
+
+      if (error) throw error;
+
+      setProfileData({ ...formData });
+
+      // Update local storage or context if needed
+      // Note: updateUser context method might need to be implemented or we rely on session
+
       toast.success("Profile updated successfully");
       setHasChanges(false);
     } catch (error) {
-      toast.error("Failed to update profile. Please try again.");
+      toast.error("Failed to update profile");
       console.error("Profile update error:", error);
     } finally {
       setIsLoading(false);
@@ -141,8 +158,8 @@ const Profile = () => {
                 <span>Joined {profileData.joinDate}</span>
               </div>
             </div>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="w-full"
               onClick={() => toast.info("Password reset instructions sent to your email")}
             >
@@ -166,10 +183,10 @@ const Profile = () => {
                   <Label htmlFor="name">Full Name</Label>
                   <div className="relative">
                     <UserRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
+                    <Input
                       id="name"
                       name="name"
-                      className="pl-10" 
+                      className="pl-10"
                       value={formData.name}
                       onChange={handleInputChange}
                     />
@@ -179,11 +196,11 @@ const Profile = () => {
                   <Label htmlFor="email">Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
+                    <Input
                       id="email"
                       name="email"
                       type="email"
-                      className="pl-10" 
+                      className="pl-10"
                       value={formData.email}
                       onChange={handleInputChange}
                     />
@@ -193,7 +210,7 @@ const Profile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="location">Location</Label>
-                  <Input 
+                  <Input
                     id="location"
                     name="location"
                     value={formData.location}
@@ -202,7 +219,7 @@ const Profile = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="role">Job Title</Label>
-                  <Input 
+                  <Input
                     id="role"
                     name="role"
                     value={formData.role}
@@ -212,7 +229,7 @@ const Profile = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="bio">Bio</Label>
-                <Textarea 
+                <Textarea
                   id="bio"
                   name="bio"
                   value={formData.bio}
@@ -222,7 +239,7 @@ const Profile = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="avatar">Profile Image URL</Label>
-                <Input 
+                <Input
                   id="avatar"
                   name="avatar"
                   value={formData.avatar}
@@ -232,8 +249,8 @@ const Profile = () => {
             </form>
           </CardContent>
           <CardFooter className="flex justify-end">
-            <Button 
-              onClick={handleSave} 
+            <Button
+              onClick={handleSave}
               disabled={isLoading || !hasChanges}
               className={!hasChanges ? "opacity-70" : ""}
             >

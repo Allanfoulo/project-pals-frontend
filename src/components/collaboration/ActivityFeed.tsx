@@ -33,144 +33,29 @@ interface Activity {
 }
 
 const ActivityFeed = ({ projectId, className }: ActivityFeedProps) => {
-  const { projects } = useProjects();
-  const [activities, setActivities] = useState<Activity[]>([]);
+  const { projects, activities, isLoading: isContextLoading } = useProjects();
   const [filter, setFilter] = useState<"all" | "mentions" | "comments">("all");
-  const [isLoading, setIsLoading] = useState(false);
-  
-  // Generate mock activities for demonstration
-  useEffect(() => {
-    generateMockActivities();
-  }, [projectId, projects]);
-  
-  const generateMockActivities = () => {
-    setIsLoading(true);
-    
-    // Get relevant projects
-    const relevantProjects = projectId 
-      ? projects.filter(p => p.id === projectId)
-      : projects;
-    
-    if (relevantProjects.length === 0) {
-      setActivities([]);
-      setIsLoading(false);
-      return;
-    }
-    
-    // Generate mock activities
-    const mockActivities: Activity[] = [];
-    
-    // Add activities for each project
-    relevantProjects.forEach(project => {
-      // Add project creation activity
-      mockActivities.push({
-        id: `create-project-${project.id}`,
-        type: "create",
-        userId: "user1",
-        userName: "John Doe",
-        userAvatar: "https://i.pravatar.cc/150?u=user1",
-        projectId: project.id,
-        projectName: project.name,
-        content: `created project ${project.name}`,
-        timestamp: new Date(project.createdAt).toISOString()
-      });
-      
-      // Add activities for each task
-      project.tasks.forEach(task => {
-        // Task creation
-        mockActivities.push({
-          id: `create-task-${task.id}`,
-          type: "create",
-          userId: "user1",
-          userName: "John Doe",
-          userAvatar: "https://i.pravatar.cc/150?u=user1",
-          projectId: project.id,
-          projectName: project.name,
-          taskId: task.id,
-          taskTitle: task.title,
-          content: `created task ${task.title}`,
-          timestamp: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString() // Random time within last week
-        });
-        
-        // Task status change
-        if (task.status !== "todo") {
-          mockActivities.push({
-            id: `status-${task.id}`,
-            type: "status",
-            userId: "user2",
-            userName: "Jane Smith",
-            userAvatar: "https://i.pravatar.cc/150?u=user2",
-            projectId: project.id,
-            projectName: project.name,
-            taskId: task.id,
-            taskTitle: task.title,
-            oldValue: "todo",
-            newValue: task.status,
-            content: `changed status from "To Do" to "${task.status === "inProgress" ? "In Progress" : task.status === "inReview" ? "In Review" : task.status === "done" ? "Done" : task.status}"`,
-            timestamp: new Date(Date.now() - Math.random() * 5 * 24 * 60 * 60 * 1000).toISOString() // Random time within last 5 days
-          });
-        }
-        
-        // Task completion
-        if (task.status === "done") {
-          mockActivities.push({
-            id: `complete-${task.id}`,
-            type: "complete",
-            userId: "user3",
-            userName: "Alex Johnson",
-            userAvatar: "https://i.pravatar.cc/150?u=user3",
-            projectId: project.id,
-            projectName: project.name,
-            taskId: task.id,
-            taskTitle: task.title,
-            content: `completed task ${task.title}`,
-            timestamp: new Date(Date.now() - Math.random() * 3 * 24 * 60 * 60 * 1000).toISOString() // Random time within last 3 days
-          });
-        }
-        
-        // Task comments (random)
-        if (Math.random() > 0.5) {
-          mockActivities.push({
-            id: `comment-${task.id}-1`,
-            type: "comment",
-            userId: "user4",
-            userName: "Emily Davis",
-            userAvatar: "https://i.pravatar.cc/150?u=user4",
-            projectId: project.id,
-            projectName: project.name,
-            taskId: task.id,
-            taskTitle: task.title,
-            content: `I'll start working on this today. @John can you clarify the requirements?`,
-            timestamp: new Date(Date.now() - Math.random() * 2 * 24 * 60 * 60 * 1000).toISOString() // Random time within last 2 days
-          });
-        }
-        
-        // Task assignment
-        if (task.assigneeId) {
-          mockActivities.push({
-            id: `assign-${task.id}`,
-            type: "assign",
-            userId: "user1",
-            userName: "John Doe",
-            userAvatar: "https://i.pravatar.cc/150?u=user1",
-            projectId: project.id,
-            projectName: project.name,
-            taskId: task.id,
-            taskTitle: task.title,
-            content: `assigned task to @${task.assigneeId === "user2" ? "Jane Smith" : task.assigneeId === "user3" ? "Alex Johnson" : task.assigneeId === "user4" ? "Emily Davis" : "User"}`,
-            timestamp: new Date(Date.now() - Math.random() * 4 * 24 * 60 * 60 * 1000).toISOString() // Random time within last 4 days
-          });
-        }
-      });
+
+  // Map activities to the local format
+  const mappedActivities: Activity[] = activities
+    .filter(a => !projectId || a.entityId === projectId || a.metadata?.projectId === projectId)
+    .map(a => {
+      const project = projects.find(p => p.id === (a.entityType === 'project' ? a.entityId : a.metadata?.projectId));
+      return {
+        id: a.id,
+        type: (a.entityType === 'project' ? (a.action === 'created' ? 'create' : 'edit') : 'status') as ActivityType,
+        userId: a.userId,
+        userName: "You", // In a real app, this would be the actual user name from profiles or auth
+        userAvatar: undefined,
+        projectId: project?.id || "",
+        projectName: project?.name || "Project",
+        taskId: a.entityType === 'task' ? a.entityId : undefined,
+        taskTitle: a.entityName,
+        content: `${a.action} ${a.entityType === 'project' ? '' : 'task'} ${a.entityName || ''}`,
+        timestamp: a.createdAt
+      };
     });
-    
-    // Sort activities by timestamp (newest first)
-    mockActivities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-    
-    setActivities(mockActivities);
-    setIsLoading(false);
-  };
-  
+
   const getActivityIcon = (type: ActivityType) => {
     switch (type) {
       case "comment":
@@ -191,7 +76,7 @@ const ActivityFeed = ({ projectId, className }: ActivityFeedProps) => {
         return <AlertCircle className="h-4 w-4" />;
     }
   };
-  
+
   const getActivityColor = (type: ActivityType) => {
     switch (type) {
       case "comment":
@@ -212,28 +97,28 @@ const ActivityFeed = ({ projectId, className }: ActivityFeedProps) => {
         return "text-gray-500";
     }
   };
-  
+
   const formatActivityContent = (content: string) => {
     // Highlight mentions
     return content.replace(/@([\w\s]+)/g, '<span class="text-blue-500 font-medium">@$1</span>');
   };
-  
-  const filteredActivities = activities.filter(activity => {
+
+  const filteredActivities = mappedActivities.filter(activity => {
     if (filter === "all") return true;
     if (filter === "mentions" && activity.content && activity.content.includes("@")) return true;
     if (filter === "comments" && activity.type === "comment") return true;
     return false;
   });
-  
+
   const refreshActivities = () => {
-    generateMockActivities();
+    // Activities auto-refresh via ProjectContext
   };
 
   // Helper function to format relative time
   const formatRelativeTime = (date: Date | string) => {
     return formatDistanceToNow(new Date(date), { addSuffix: true });
   };
-  
+
   return (
     <Card className={className}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -250,9 +135,9 @@ const ActivityFeed = ({ projectId, className }: ActivityFeedProps) => {
             <TabsTrigger value="mentions">@Mentions</TabsTrigger>
             <TabsTrigger value="comments">Comments</TabsTrigger>
           </TabsList>
-          
+
           <div className="mt-4 space-y-4">
-            {isLoading ? (
+            {isContextLoading ? (
               <div className="flex justify-center py-8">
                 <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
@@ -263,7 +148,7 @@ const ActivityFeed = ({ projectId, className }: ActivityFeedProps) => {
                     {activity.userAvatar && <AvatarImage src={activity.userAvatar} alt={activity.userName} />}
                     <AvatarFallback>{activity.userName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                   </Avatar>
-                  
+
                   <div className="flex-1 space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{activity.userName}</span>
@@ -274,12 +159,12 @@ const ActivityFeed = ({ projectId, className }: ActivityFeedProps) => {
                         {formatRelativeTime(activity.timestamp)}
                       </span>
                     </div>
-                    
-                    <p 
-                      className="text-sm" 
+
+                    <p
+                      className="text-sm"
                       dangerouslySetInnerHTML={{ __html: formatActivityContent(activity.content || '') }}
                     />
-                    
+
                     <div className="flex items-center gap-2 mt-1">
                       {activity.taskId && (
                         <Badge variant="outline" className="text-xs">

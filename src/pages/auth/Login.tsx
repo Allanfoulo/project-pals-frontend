@@ -18,7 +18,7 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       toast({
         title: "Error",
@@ -27,9 +27,9 @@ const Login = () => {
       });
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
       await login(email, password);
       navigate("/");
@@ -62,8 +62,8 @@ const Login = () => {
   };
 
   return (
-    <AuthLayout 
-      title="Welcome back" 
+    <AuthLayout
+      title="Welcome back"
       subtitle="Sign in to your account to continue"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -76,7 +76,7 @@ const Login = () => {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email"
             required
-            className="bg-white"
+            className="w-full"
           />
         </div>
 
@@ -97,7 +97,7 @@ const Login = () => {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter your password"
             required
-            className="bg-white"
+            className="w-full"
           />
         </div>
 

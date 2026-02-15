@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProjectProvider } from "@/contexts/ProjectContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { AIProvider } from "@/contexts/AIContext";
 
 // Layout
 import Layout from "@/components/layout/Layout";
@@ -41,34 +42,36 @@ const App = () => (
       <TooltipProvider>
         <AuthProvider>
           <ProjectProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                {/* Auth Routes */}
-                <Route path="/auth/login" element={<Login />} />
-                <Route path="/auth/signup" element={<Signup />} />
-                
-                {/* Main App Routes */}
-                <Route path="/" element={<Layout />}>
-                  <Route index element={<Dashboard />} />
-                  <Route path="projects" element={<ProjectsList />} />
-                  <Route path="projects/:projectId" element={<ProjectDetail />} />
-                  <Route path="calendar" element={<Calendar />} />
-                  <Route path="tasks" element={<Tasks />} />
-                  <Route path="team" element={<Team />} />
-                  <Route path="integrations" element={<Integrations />} />
-                  <Route path="notifications" element={<NotificationsPage />} />
-                  
-                  {/* User Routes */}
-                  <Route path="profile" element={<Profile />} />
-                  <Route path="settings" element={<Settings />} />
-                  <Route path="settings/theme" element={<ThemeSettings />} />
-                  
-                  <Route path="*" element={<NotFound />} />
-                </Route>
-              </Routes>
-            </BrowserRouter>
+            <AIProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  {/* Auth Routes */}
+                  <Route path="/auth/login" element={<Login />} />
+                  <Route path="/auth/signup" element={<Signup />} />
+
+                  {/* Main App Routes */}
+                  <Route path="/" element={<Layout />}>
+                    <Route index element={<Dashboard />} />
+                    <Route path="projects" element={<ProjectsList />} />
+                    <Route path="projects/:projectId" element={<ProjectDetail />} />
+                    <Route path="calendar" element={<Calendar />} />
+                    <Route path="tasks" element={<Tasks />} />
+                    <Route path="team" element={<Team />} />
+                    <Route path="integrations" element={<Integrations />} />
+                    <Route path="notifications" element={<NotificationsPage />} />
+
+                    {/* User Routes */}
+                    <Route path="profile" element={<Profile />} />
+                    <Route path="settings" element={<Settings />} />
+                    <Route path="settings/theme" element={<ThemeSettings />} />
+
+                    <Route path="*" element={<NotFound />} />
+                  </Route>
+                </Routes>
+              </BrowserRouter>
+            </AIProvider>
           </ProjectProvider>
         </AuthProvider>
       </TooltipProvider>

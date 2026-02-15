@@ -1,0 +1,170 @@
+import React, { useState, useRef, useEffect } from "react";
+import { useAI } from "@/contexts/AIContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+    Bot,
+    Send,
+    X,
+    Minus,
+    Sparkles,
+    MessageSquare,
+    ChevronDown,
+    Trash2
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { C1Component } from "@thesysai/genui-sdk";
+
+const AIAssistant = () => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [input, setInput] = useState("");
+    const { messages, sendMessage, isThinking, clearHistory } = useAI();
+    const scrollRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+    }, [messages, isThinking]);
+
+    const handleSend = async () => {
+        if (!input.trim() || isThinking) return;
+        const msg = input;
+        setInput("");
+        await sendMessage(msg);
+    };
+
+    if (!isOpen) {
+        return (
+            <Button
+                onClick={() => setIsOpen(true)}
+                className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-2xl animate-bounce hover:animate-none group bg-primary p-0"
+            >
+                <Sparkles className="h-6 w-6 text-primary-foreground group-hover:scale-110 transition-transform" />
+            </Button>
+        );
+    }
+
+    return (
+        <Card className="fixed bottom-6 right-6 w-96 h-[600px] flex flex-col shadow-2xl glass-card border-primary/20 animate-scale-in z-50">
+            <CardHeader className="p-4 border-b flex flex-row items-center justify-between bg-primary/5">
+                <div className="flex items-center gap-2">
+                    <div className="bg-primary p-2 rounded-xl">
+                        <Bot className="h-5 w-5 text-primary-foreground" />
+                    </div>
+                    <div>
+                        <CardTitle className="text-sm font-bold">TaskFlow Agent</CardTitle>
+                        <div className="flex items-center gap-1">
+                            <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                            <span className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Online</span>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="icon" onClick={clearHistory} className="h-8 w-8 text-muted-foreground hover:text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="h-8 w-8">
+                        <Minus className="h-4 w-4" />
+                    </Button>
+                </div>
+            </CardHeader>
+
+            <ScrollArea className="flex-1 p-4 overflow-y-auto" ref={scrollRef}>
+                <div className="space-y-4">
+                    {messages.length === 0 && (
+                        <div className="text-center py-8 space-y-4">
+                            <div className="bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto">
+                                <Sparkles className="h-6 w-6 text-primary" />
+                            </div>
+                            <div className="space-y-1">
+                                <p className="font-semibold text-sm">How can I help you today?</p>
+                                <p className="text-xs text-muted-foreground">Try asking about your projects, tasks, or for a summary.</p>
+                            </div>
+                            <div className="grid grid-cols-1 gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-[10px] justify-start h-8 bg-background/50"
+                                    onClick={() => sendMessage("Give me a summary of my active projects.")}
+                                >
+                                    "Summarize my active projects"
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-[10px] justify-start h-8 bg-background/50"
+                                    onClick={() => sendMessage("Generate a task list for a new marketing campaign.")}
+                                >
+                                    "Generate a task list for marketing"
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    {messages.map((m, i) => (
+                        <div
+                            key={i}
+                            className={cn(
+                                "flex flex-col gap-2 max-w-[85%] animate-fade-in",
+                                m.role === "user" ? "ml-auto items-end" : "mr-auto items-start"
+                            )}
+                        >
+                            <div
+                                className={cn(
+                                    "p-3 rounded-2xl text-sm shadow-sm",
+                                    m.role === "user"
+                                        ? "bg-primary text-primary-foreground rounded-tr-none"
+                                        : "bg-secondary text-secondary-foreground rounded-tl-none border border-border"
+                                )}
+                            >
+                                {/* Check if it's a Thesys DSL and render C1Component if so */}
+                                {m.content.includes("```thesys") || m.content.includes("{\"c1\":") ? (
+                                    <C1Component c1Response={m.content} isStreaming={false} />
+                                ) : (
+                                    m.content
+                                )}
+                            </div>
+                        </div>
+                    ))}
+
+                    {isThinking && (
+                        <div className="flex items-center gap-2 text-muted-foreground animate-pulse">
+                            <Bot className="h-4 w-4" />
+                            <div className="flex gap-1">
+                                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40 animate-bounce" />
+                                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40 animate-bounce delay-150" />
+                                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40 animate-bounce delay-300" />
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </ScrollArea>
+
+            <CardFooter className="p-4 border-t bg-background/50">
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        handleSend();
+                    }}
+                    className="flex w-full items-center space-x-2"
+                >
+                    <Input
+                        placeholder="Ask anything..."
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        disabled={isThinking}
+                        className="flex-1 bg-background/80 focus-visible:ring-primary h-10 border-none shadow-inner"
+                    />
+                    <Button type="submit" size="icon" disabled={isThinking || !input.trim()} className="h-10 w-10 shadow-lg">
+                        <Send className="h-4 w-4" />
+                    </Button>
+                </form>
+            </CardFooter>
+        </Card>
+    );
+};
+
+export default AIAssistant;

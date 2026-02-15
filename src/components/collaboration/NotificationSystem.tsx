@@ -44,26 +44,26 @@ const NotificationSystem = ({ className }: NotificationSystemProps) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
-  
+
   // Generate mock notifications
   useEffect(() => {
     generateMockNotifications();
-    
+
     // Simulate receiving new notifications
     const interval = setInterval(() => {
       if (Math.random() > 0.7) { // 30% chance of new notification
         addRandomNotification();
       }
     }, 60000); // Every minute
-    
+
     return () => clearInterval(interval);
   }, [projects]);
-  
+
   // Update unread count when notifications change
   useEffect(() => {
     setUnreadCount(notifications.filter(n => !n.read).length);
   }, [notifications]);
-  
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -74,16 +74,16 @@ const NotificationSystem = ({ className }: NotificationSystemProps) => {
         setIsOpen(false);
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
-  
+
   const generateMockNotifications = () => {
     if (projects.length === 0) return;
-    
+
     const mockNotifications: Notification[] = [];
-    
+
     // Generate notifications based on projects and tasks
     projects.forEach(project => {
       // Project deadline approaching
@@ -100,7 +100,7 @@ const NotificationSystem = ({ className }: NotificationSystemProps) => {
           link: `/projects/${project.id}`
         });
       }
-      
+
       // Task notifications
       project.tasks.forEach(task => {
         // Task assignment
@@ -119,7 +119,7 @@ const NotificationSystem = ({ className }: NotificationSystemProps) => {
             link: `/projects/${project.id}?task=${task.id}`
           });
         }
-        
+
         // Task mentions (random)
         if (Math.random() > 0.7) {
           mockNotifications.push({
@@ -139,7 +139,7 @@ const NotificationSystem = ({ className }: NotificationSystemProps) => {
             link: `/projects/${project.id}?task=${task.id}`
           });
         }
-        
+
         // Task comments (random)
         if (Math.random() > 0.6) {
           mockNotifications.push({
@@ -159,7 +159,7 @@ const NotificationSystem = ({ className }: NotificationSystemProps) => {
             link: `/projects/${project.id}?task=${task.id}`
           });
         }
-        
+
         // Task status changes (random)
         if (task.status === "done" && Math.random() > 0.5) {
           mockNotifications.push({
@@ -178,49 +178,49 @@ const NotificationSystem = ({ className }: NotificationSystemProps) => {
         }
       });
     });
-    
+
     // System notification
     mockNotifications.push({
       id: "system-update",
       type: "system",
       title: "System Update",
-      message: "Project Pals has been updated with new features! Check out the collaboration tools.",
+      message: "TaskFlow has been updated with new features! Check out the collaboration tools.",
       read: false,
       timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
       link: "/whats-new"
     });
-    
+
     // Sort by timestamp (newest first)
     mockNotifications.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-    
+
     // Limit to 15 notifications
     setNotifications(mockNotifications.slice(0, 15));
   };
-  
+
   const addRandomNotification = () => {
     if (projects.length === 0) return;
-    
+
     const project = projects[Math.floor(Math.random() * projects.length)];
     if (!project || project.tasks.length === 0) return;
-    
+
     const task = project.tasks[Math.floor(Math.random() * project.tasks.length)];
-    
+
     const notificationTypes: NotificationType[] = ["mention", "comment", "assignment", "deadline", "status"];
     const type = notificationTypes[Math.floor(Math.random() * notificationTypes.length)];
-    
+
     const newNotification: Notification = {
       id: `${type}-${Date.now()}`,
       type,
       title: type === "mention" ? "You were mentioned" :
-             type === "comment" ? "New Comment" :
-             type === "assignment" ? "Task Assigned" :
-             type === "deadline" ? "Deadline Approaching" :
-             "Status Update",
+        type === "comment" ? "New Comment" :
+          type === "assignment" ? "Task Assigned" :
+            type === "deadline" ? "Deadline Approaching" :
+              "Status Update",
       message: type === "mention" ? `@Jane mentioned you in a comment on "${task.title}"` :
-               type === "comment" ? `New comment on task "${task.title}" from Alex` :
-               type === "assignment" ? `You've been assigned to "${task.title}" in ${project.name}` :
-               type === "deadline" ? `Task "${task.title}" is due tomorrow` :
-               `Task "${task.title}" status changed to ${task.status}`,
+        type === "comment" ? `New comment on task "${task.title}" from Alex` :
+          type === "assignment" ? `You've been assigned to "${task.title}" in ${project.name}` :
+            type === "deadline" ? `Task "${task.title}" is due tomorrow` :
+              `Task "${task.title}" status changed to ${task.status}`,
       read: false,
       timestamp: new Date().toISOString(),
       projectId: project.id,
@@ -232,22 +232,22 @@ const NotificationSystem = ({ className }: NotificationSystemProps) => {
       userAvatar: type === "mention" ? "https://i.pravatar.cc/150?u=user2" : type === "comment" ? "https://i.pravatar.cc/150?u=user3" : undefined,
       link: `/projects/${project.id}?task=${task.id}`
     };
-    
+
     setNotifications(prev => [newNotification, ...prev.slice(0, 14)]);
   };
-  
+
   const markAllAsRead = () => {
     setNotifications(prev => prev.map(notification => ({ ...notification, read: true })));
   };
-  
+
   const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
+    setNotifications(prev =>
+      prev.map(notification =>
         notification.id === id ? { ...notification, read: true } : notification
       )
     );
   };
-  
+
   const getNotificationIcon = (type: NotificationType) => {
     switch (type) {
       case "mention":
@@ -271,7 +271,7 @@ const NotificationSystem = ({ className }: NotificationSystemProps) => {
   const formatRelativeTime = (date: Date | string) => {
     return formatDistance(new Date(date), new Date(), { addSuffix: true });
   };
-  
+
   return (
     <div className={className}>
       <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -305,8 +305,8 @@ const NotificationSystem = ({ className }: NotificationSystemProps) => {
             {notifications.length > 0 ? (
               <DropdownMenuGroup>
                 {notifications.map(notification => (
-                  <DropdownMenuItem 
-                    key={notification.id} 
+                  <DropdownMenuItem
+                    key={notification.id}
                     className={`flex items-start gap-2 p-3 cursor-pointer ${!notification.read ? 'bg-muted/50' : ''}`}
                     onClick={(e) => {
                       e.stopPropagation();

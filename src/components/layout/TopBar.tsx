@@ -54,11 +54,11 @@ const TopBar = ({ onToggleSidebar }: TopBarProps) => {
   const [newWorkspaceColor, setNewWorkspaceColor] = useState("#4f46e5");
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/auth/login");
   };
-  
+
   const handleCreateWorkspace = () => {
     if (!newWorkspaceName.trim()) {
       toast({
@@ -68,19 +68,19 @@ const TopBar = ({ onToggleSidebar }: TopBarProps) => {
       });
       return;
     }
-    
+
     const newWorkspace = {
       id: uuidv4(),
       name: newWorkspaceName,
       color: newWorkspaceColor,
       createdAt: new Date().toISOString(),
     };
-    
+
     addWorkspace(newWorkspace);
     setNewWorkspaceName("");
     setNewWorkspaceColor("#4f46e5");
     setIsCreateWorkspaceOpen(false);
-    
+
     toast({
       title: "Workspace created",
       description: `${newWorkspaceName} has been created successfully`,
@@ -129,7 +129,7 @@ const TopBar = ({ onToggleSidebar }: TopBarProps) => {
 
       <div className="flex items-center space-x-4">
         <ThemeToggle />
-        
+
         <Popover>
           <PopoverTrigger asChild>
             <Button
@@ -160,7 +160,7 @@ const TopBar = ({ onToggleSidebar }: TopBarProps) => {
                   navigate('/projects');
                 }}
               />
-              
+
               {projects.length > 0 ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -193,7 +193,7 @@ const TopBar = ({ onToggleSidebar }: TopBarProps) => {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <button 
+                <button
                   className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-secondary transition-colors flex items-center gap-2 opacity-50"
                   onClick={() => toast({
                     title: "No projects available",
@@ -205,14 +205,14 @@ const TopBar = ({ onToggleSidebar }: TopBarProps) => {
                   New Task
                 </button>
               )}
-              
+
               {selectedProjectId && (
                 <CreateTaskModal
                   projectId={selectedProjectId}
                   trigger={<span className="hidden" />}
                 />
               )}
-              
+
               <Dialog open={isCreateWorkspaceOpen} onOpenChange={setIsCreateWorkspaceOpen}>
                 <DialogTrigger asChild>
                   <button className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-secondary transition-colors flex items-center gap-2">
@@ -244,7 +244,7 @@ const TopBar = ({ onToggleSidebar }: TopBarProps) => {
                           onChange={(e) => setNewWorkspaceColor(e.target.value)}
                           className="w-12 h-8 p-1"
                         />
-                        <div 
+                        <div
                           className="w-8 h-8 rounded-full border"
                           style={{ backgroundColor: newWorkspaceColor }}
                         />

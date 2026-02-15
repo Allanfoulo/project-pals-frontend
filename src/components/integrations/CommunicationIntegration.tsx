@@ -35,13 +35,13 @@ const CommunicationIntegration = ({ className }: CommunicationIntegrationProps) 
       id: "1",
       name: "Slack",
       provider: "slack",
-      workspace: "Project Pals Team",
+      workspace: "TaskFlow Team",
       connected: true,
       lastSync: "2025-04-03T06:30:00Z",
       channels: ["#general", "#project-updates", "#development"],
     },
   ]);
-  
+
   const [settings, setSettings] = useState({
     notifyOnTaskAssignment: true,
     notifyOnComments: true,
@@ -61,17 +61,17 @@ const CommunicationIntegration = ({ className }: CommunicationIntegrationProps) 
     setTimeout(() => {
       const newApp: ConnectedApp = {
         id: `${apps.length + 1}`,
-        name: provider === "slack" ? "Slack" : 
-              provider === "teams" ? "Microsoft Teams" : 
-              provider === "discord" ? "Discord" : 
+        name: provider === "slack" ? "Slack" :
+          provider === "teams" ? "Microsoft Teams" :
+            provider === "discord" ? "Discord" :
               provider === "zoom" ? "Zoom" : "Other Platform",
         provider,
         workspace: "New Workspace",
         connected: true,
         lastSync: new Date().toISOString(),
-        channels: provider === "slack" ? ["#general"] : 
-                 provider === "teams" ? ["General"] : 
-                 provider === "discord" ? ["general"] : [],
+        channels: provider === "slack" ? ["#general"] :
+          provider === "teams" ? ["General"] :
+            provider === "discord" ? ["general"] : [],
       };
 
       setApps([...apps, newApp]);

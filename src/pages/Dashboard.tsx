@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
+import SmartInsights from "@/components/dashboard/SmartInsights";
 
 // Mock data for charts
 const activityData = [
@@ -40,16 +41,30 @@ const activityData = [
   { name: "Sun", tasks: 3 },
 ];
 
-const projectStatusData = [
-  { name: "Mobile App", completed: 25, total: 100 },
-  { name: "Website", completed: 65, total: 100 },
-  { name: "Marketing", completed: 35, total: 100 },
-];
-
 const Dashboard = () => {
-  const { projects } = useProjects();
+  const { projects, activities } = useProjects();
   const { user } = useAuth();
   const isMobile = useIsMobile();
+
+  // Derive project status data from projects
+  const projectStatusData = projects.slice(0, 5).map(project => ({
+    name: project.name.length > 15 ? project.name.substring(0, 12) + '...' : project.name,
+    completed: project.progress,
+    total: 100
+  }));
+
+  // Map activities to dashboard format
+  const recentActivities = activities.slice(0, 5).map(activity => ({
+    id: activity.id,
+    action: activity.action,
+    taskName: activity.entityName || "item",
+    project: projects.find(p => p.id === (activity.entityType === 'project' ? activity.entityId : activity.metadata?.projectId))?.name || "Project",
+    timestamp: activity.createdAt,
+    user: {
+      name: user?.name || "User",
+      avatar: user?.avatarUrl || `https://ui-avatars.com/api/?name=${user?.name || 'User'}`,
+    },
+  }));
 
   // Calculate dashboard stats
   const totalProjects = projects.length;
@@ -83,67 +98,19 @@ const Dashboard = () => {
     )
     .slice(0, 3);
 
-  // Mock recent activities
-  const recentActivities = [
-    {
-      id: 1,
-      action: "completed a task",
-      taskName: "Design homepage wireframe",
-      project: "Website Redesign",
-      timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
-      user: {
-        name: "Alex Johnson",
-        avatar: "https://i.pravatar.cc/150?u=alex",
-      },
-    },
-    {
-      id: 2,
-      action: "added a new task",
-      taskName: "Research competitors",
-      project: "Q3 Marketing Campaign",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-      user: {
-        name: "Sarah Miller",
-        avatar: "https://i.pravatar.cc/150?u=sarah",
-      },
-    },
-    {
-      id: 3,
-      action: "commented on",
-      taskName: "Set up project architecture",
-      project: "Mobile App Development",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
-      user: {
-        name: "David Chen",
-        avatar: "https://i.pravatar.cc/150?u=david",
-      },
-    },
-    {
-      id: 4,
-      action: "changed the status of",
-      taskName: "UI wireframes",
-      project: "Mobile App Development",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(), // 8 hours ago
-      user: {
-        name: "Emma Thompson",
-        avatar: "https://i.pravatar.cc/150?u=emma",
-      },
-    },
-  ];
-
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">
+        <div className="animate-slide-in">
+          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">Dashboard</h1>
+          <p className="text-muted-foreground mt-1 text-lg">
             Welcome back, {user?.name}
           </p>
         </div>
-        <div className="mt-4 md:mt-0">
+        <div className="mt-4 md:mt-0 animate-scale-in">
           <Link
             to="/projects/new"
-            className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 transition-colors"
+            className="inline-flex items-center px-6 py-3 bg-primary text-primary-foreground text-sm font-semibold rounded-2xl hover:bg-primary/90 transition-all hover:scale-105 shadow-lg shadow-primary/20"
           >
             <Layers className="mr-2 h-4 w-4" />
             New Project
@@ -151,35 +118,35 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="glass-card">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="glass-card animate-slide-up" style={{ animationDelay: '0.1s' }}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
               Total Projects
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center">
-              <div className="mr-2 rounded-full p-2 bg-blue-100/50">
-                <Layers className="h-4 w-4 text-blue-500" />
+              <div className="mr-4 rounded-2xl p-3 bg-blue-100/50 dark:bg-blue-500/10">
+                <Layers className="h-5 w-5 text-blue-500" />
               </div>
-              <div className="text-2xl font-bold">{totalProjects}</div>
+              <div className="text-3xl font-bold">{totalProjects}</div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-card">
+        <Card className="glass-card animate-slide-up" style={{ animationDelay: '0.2s' }}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
               Task Completion
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center">
-              <div className="mr-2 rounded-full p-2 bg-green-100/50">
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
+              <div className="mr-4 rounded-2xl p-3 bg-green-100/50 dark:bg-green-500/10">
+                <CheckCircle2 className="h-5 w-5 text-green-500" />
               </div>
-              <div className="text-2xl font-bold">
+              <div className="text-3xl font-bold">
                 {totalTasks > 0
                   ? Math.round((completedTasks / totalTasks) * 100)
                   : 0}
@@ -188,46 +155,50 @@ const Dashboard = () => {
             </div>
             <Progress
               value={totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0}
-              className="h-2 mt-2"
+              className="h-2 mt-4"
             />
           </CardContent>
         </Card>
 
-        <Card className="glass-card">
+        <Card className="glass-card animate-slide-up" style={{ animationDelay: '0.3s' }}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
               Active Tasks
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center">
-              <div className="mr-2 rounded-full p-2 bg-amber-100/50">
-                <Clock className="h-4 w-4 text-amber-500" />
+              <div className="mr-4 rounded-2xl p-3 bg-amber-100/50 dark:bg-amber-500/10">
+                <Clock className="h-5 w-5 text-amber-500" />
               </div>
-              <div className="text-2xl font-bold">
+              <div className="text-3xl font-bold">
                 {totalTasks - completedTasks}
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-card">
+        <Card className="glass-card animate-slide-up" style={{ animationDelay: '0.4s' }}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
               Upcoming Deadlines
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center">
-              <div className="mr-2 rounded-full p-2 bg-red-100/50">
-                <AlertCircle className="h-4 w-4 text-red-500" />
+              <div className="mr-4 rounded-2xl p-3 bg-red-100/50 dark:bg-red-500/10">
+                <AlertCircle className="h-5 w-5 text-red-500" />
               </div>
-              <div className="text-2xl font-bold">
+              <div className="text-3xl font-bold">
                 {upcomingDeadlines.length}
               </div>
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="animate-slide-up" style={{ animationDelay: '0.5s' }}>
+        <SmartInsights />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

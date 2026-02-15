@@ -20,7 +20,7 @@ type SortDirection = "asc" | "desc";
 // Simplified inline TaskItem component
 const SimpleTaskItem = ({ task }: { task: Task }) => {
   const { updateTask } = useProjects();
-  
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "urgent":
@@ -68,23 +68,35 @@ const SimpleTaskItem = ({ task }: { task: Task }) => {
     }
   };
 
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const toggleTaskStatus = () => {
     const newStatus = task.status === "done" ? "todo" : "done";
     updateTask(task.id, { status: newStatus });
+  };
+
+  const toggleSubtask = (subtaskId: string) => {
+    const updatedSubtasks = task.subtasks.map(s =>
+      s.id === subtaskId ? { ...s, completed: !s.completed } : s
+    );
+    updateTask(task.id, { subtasks: updatedSubtasks });
   };
 
   return (
     <Card className="overflow-hidden">
       <CardContent className="p-4">
         <div className="flex items-start gap-2">
-          <Checkbox 
-            checked={task.status === "done"} 
+          <Checkbox
+            checked={task.status === "done"}
             onCheckedChange={toggleTaskStatus}
             className="mt-1"
           />
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
+            <div
+              className="flex items-start justify-between cursor-pointer"
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
+              <div className="flex-1 select-none">
                 <h3 className={`font-medium ${task.status === "done" ? "line-through text-muted-foreground" : ""}`}>
                   {task.title}
                 </h3>
@@ -100,8 +112,30 @@ const SimpleTaskItem = ({ task }: { task: Task }) => {
                 <Badge className={`${getStatusColor(task.status)} text-white`} variant="secondary">
                   {getStatusText(task.status)}
                 </Badge>
+                {task.subtasks && task.subtasks.length > 0 && (
+                  <Badge variant="outline" className="text-xs">
+                    {task.subtasks.filter(s => s.completed).length}/{task.subtasks.length}
+                  </Badge>
+                )}
               </div>
             </div>
+
+            {isExpanded && task.subtasks && task.subtasks.length > 0 && (
+              <div className="mt-3 pl-2 space-y-2 border-l-2 border-muted ml-1">
+                {task.subtasks.map(subtask => (
+                  <div key={subtask.id} className="flex items-center gap-2">
+                    <Checkbox
+                      checked={subtask.completed}
+                      onCheckedChange={() => toggleSubtask(subtask.id)}
+                      className="h-3 w-3"
+                    />
+                    <span className={`text-sm ${subtask.completed ? "line-through text-muted-foreground" : ""}`}>
+                      {subtask.title}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
@@ -125,7 +159,7 @@ const TaskList = ({ projectId, className }: TaskListProps) => {
   const sortTasks = (tasks: Task[]) => {
     return [...tasks].sort((a, b) => {
       let comparison = 0;
-      
+
       if (sortBy === "priority") {
         const priorityOrder = { low: 1, medium: 2, high: 3, urgent: 4 };
         comparison = priorityOrder[a.priority] - priorityOrder[b.priority];
@@ -139,14 +173,14 @@ const TaskList = ({ projectId, className }: TaskListProps) => {
       } else if (sortBy === "title") {
         comparison = a.title.localeCompare(b.title);
       }
-      
+
       return sortDirection === "asc" ? comparison : -comparison;
     });
   };
 
   const filterTasks = (tasks: Task[]) => {
     if (!filter) return tasks;
-    
+
     switch (filter) {
       case "overdue":
         return tasks.filter(task => task.dueDate && isPast(new Date(task.dueDate)) && task.status !== "done");
@@ -210,50 +244,50 @@ const TaskList = ({ projectId, className }: TaskListProps) => {
         </div>
       </CardHeader>
       <div className="px-6 pb-2 flex flex-wrap gap-1 task-filters">
-        <Badge 
-          variant={filter === null ? "default" : "outline"} 
+        <Badge
+          variant={filter === null ? "default" : "outline"}
           className="cursor-pointer"
           onClick={() => setFilter(null)}
         >
           All
         </Badge>
-        <Badge 
-          variant={filter === "overdue" ? "default" : "outline"} 
+        <Badge
+          variant={filter === "overdue" ? "default" : "outline"}
           className="cursor-pointer"
           onClick={() => setFilter("overdue")}
         >
           Overdue
         </Badge>
-        <Badge 
-          variant={filter === "today" ? "default" : "outline"} 
+        <Badge
+          variant={filter === "today" ? "default" : "outline"}
           className="cursor-pointer"
           onClick={() => setFilter("today")}
         >
           Today
         </Badge>
-        <Badge 
-          variant={filter === "high" ? "default" : "outline"} 
+        <Badge
+          variant={filter === "high" ? "default" : "outline"}
           className="cursor-pointer"
           onClick={() => setFilter("high")}
         >
           High Priority
         </Badge>
-        <Badge 
-          variant={filter === "inProgress" ? "default" : "outline"} 
+        <Badge
+          variant={filter === "inProgress" ? "default" : "outline"}
           className="cursor-pointer"
           onClick={() => setFilter("inProgress")}
         >
           In Progress
         </Badge>
-        <Badge 
-          variant={filter === "todo" ? "default" : "outline"} 
+        <Badge
+          variant={filter === "todo" ? "default" : "outline"}
           className="cursor-pointer"
           onClick={() => setFilter("todo")}
         >
           To Do
         </Badge>
-        <Badge 
-          variant={filter === "done" ? "default" : "outline"} 
+        <Badge
+          variant={filter === "done" ? "default" : "outline"}
           className="cursor-pointer"
           onClick={() => setFilter("done")}
         >

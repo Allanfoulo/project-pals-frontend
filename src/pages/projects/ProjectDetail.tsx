@@ -29,6 +29,7 @@ import CreateTaskModal from "@/components/tasks/CreateTaskModal";
 import CalendarView from "@/components/tasks/CalendarView";
 import { AnalyticsDashboard } from "@/components/analytics";
 import { ActivityFeed } from "@/components/collaboration";
+import AutopilotController from "@/components/projects/AutopilotController";
 
 import {
   Calendar,
@@ -46,6 +47,7 @@ import {
   CheckSquare,
   LineChart,
   MessageSquare,
+  Sparkles,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -61,6 +63,7 @@ const ProjectDetail = () => {
   } = useProjects();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [isAutopilotActive, setIsAutopilotActive] = useState(false);
 
   if (!projectId) {
     return <div>Project ID is missing</div>;
@@ -133,6 +136,22 @@ const ProjectDetail = () => {
             </Badge>
           )}
           <ProjectTags projectId={project.id} className="ml-2" />
+          <Button
+            variant="outline"
+            size="sm"
+            className="ml-2 gap-2 border-purple-500/50 hover:bg-purple-500/10 hover:text-purple-500"
+            onClick={() => {
+              const newState = !isAutopilotActive;
+              setIsAutopilotActive(newState);
+              toast({
+                title: newState ? "Autopilot Activated" : "Autopilot Deactivated",
+                description: newState ? "AI is now monitoring this project for updates." : "AI monitoring stopped."
+              });
+            }}
+          >
+            <Sparkles className={`h-4 w-4 ${isAutopilotActive ? "text-purple-500 fill-purple-500" : "text-purple-500"}`} />
+            <span>{isAutopilotActive ? "Active" : "Autopilot"}</span>
+          </Button>
         </div>
 
         <div className="flex items-center space-x-2">
@@ -202,6 +221,12 @@ const ProjectDetail = () => {
         </div>
       </div>
 
+      <AutopilotController
+        projectId={project.id}
+        isActive={isAutopilotActive}
+        onDeactivate={() => setIsAutopilotActive(false)}
+      />
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="glass-card p-4 rounded-lg">
           <p className="text-sm text-muted-foreground">Progress</p>
@@ -266,7 +291,7 @@ const ProjectDetail = () => {
             <p className="text-xs text-muted-foreground mt-2">
               {Math.ceil(
                 (new Date(project.dueDate).getTime() - new Date().getTime()) /
-                  (1000 * 60 * 60 * 24)
+                (1000 * 60 * 60 * 24)
               )}{" "}
               days remaining
             </p>
@@ -283,7 +308,7 @@ const ProjectDetail = () => {
           <p className="text-xs text-muted-foreground mt-2">
             {Math.ceil(
               (new Date().getTime() - new Date(project.createdAt).getTime()) /
-                (1000 * 60 * 60 * 24)
+              (1000 * 60 * 60 * 24)
             )}{" "}
             days ago
           </p>
@@ -346,15 +371,15 @@ const ProjectDetail = () => {
             <p>List view coming soon</p>
           </div>
         </TabsContent>
-        
+
         <TabsContent value="tasks" className="flex-1 mt-6">
           <TaskList projectId={project.id} />
         </TabsContent>
-        
+
         <TabsContent value="calendar" className="flex-1 mt-6">
           <CalendarView projectId={project.id} />
         </TabsContent>
-        
+
         <TabsContent value="analytics" className="flex-1 mt-6">
           <AnalyticsDashboard projectId={project.id} />
         </TabsContent>
@@ -363,7 +388,7 @@ const ProjectDetail = () => {
           <ActivityFeed projectId={project.id} />
         </TabsContent>
       </Tabs>
-    </div>
+    </div >
   );
 };
 

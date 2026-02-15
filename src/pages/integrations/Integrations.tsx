@@ -1,4 +1,4 @@
-import { CalendarIntegration, FileStorageIntegration, CommunicationIntegration, ApiIntegration, EmailIntegration } from "@/components/integrations";
+import { CalendarIntegration, FileStorageIntegration, CommunicationIntegration, ApiIntegration, EmailIntegration, N8nIntegration } from "@/components/integrations";
 import { Separator } from "@/components/ui/separator";
 
 const Integrations = () => {
@@ -10,10 +10,11 @@ const Integrations = () => {
           Connect your favorite tools and services to enhance your workflow.
         </p>
       </div>
-      
+
       <Separator />
 
       <div className="grid grid-cols-1 gap-8">
+        <N8nIntegration />
         <CalendarIntegration />
         <FileStorageIntegration />
         <CommunicationIntegration />

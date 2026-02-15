@@ -19,7 +19,7 @@ const Signup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!name || !email || !password) {
       toast({
         title: "Error",
@@ -28,9 +28,9 @@ const Signup = () => {
       });
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
       await signup(name, email, password);
       navigate("/");
@@ -50,8 +50,8 @@ const Signup = () => {
   };
 
   return (
-    <AuthLayout 
-      title="Create an account" 
+    <AuthLayout
+      title="Create an account"
       subtitle="Sign up to get started with TaskFlow"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -64,7 +64,7 @@ const Signup = () => {
             onChange={(e) => setName(e.target.value)}
             placeholder="Enter your name"
             required
-            className="bg-white"
+            className="w-full"
           />
         </div>
 
@@ -77,7 +77,7 @@ const Signup = () => {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email"
             required
-            className="bg-white"
+            className="w-full"
           />
         </div>
 
@@ -90,7 +90,7 @@ const Signup = () => {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Create a password"
             required
-            className="bg-white"
+            className="w-full"
           />
           <p className="text-xs text-muted-foreground">
             Password must be at least 8 characters long

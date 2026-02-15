@@ -1,36 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-// Using custom button-based navigation instead of Tabs to avoid rendering issues
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { 
-  Bell, 
-  Moon, 
-  Sun, 
+import {
+  Bell,
+  Moon,
+  Sun,
   Monitor,
-  Globe, 
-  Briefcase, 
-  Shield, 
-  Save,
+  Globe,
   CreditCard,
-  Users
+  Save,
 } from "lucide-react";
 import { CollaborationSettings } from "@/components/collaboration";
 
 const Settings = () => {
   const { theme, setTheme } = useTheme();
-  
+  const { user } = useAuth();
+
   const [notificationSettings, setNotificationSettings] = useState({
     emailNotifications: true,
     pushNotifications: true,
@@ -46,19 +45,84 @@ const Settings = () => {
     timeFormat: "12-hour",
   });
 
-  const handleNotificationToggle = (setting: keyof typeof notificationSettings) => {
-    setNotificationSettings(prev => ({
-      ...prev,
-      [setting]: !prev[setting]
-    }));
-    toast.success(`${setting} ${notificationSettings[setting] ? 'disabled' : 'enabled'}`);
+  const [activeTab, setActiveTab] = useState("account");
+
+  // Fetch preferences on mount
+  useEffect(() => {
+    const fetchPreferences = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('preferences')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+
+        if (data?.preferences) {
+          const prefs = data.preferences;
+          if (prefs.account) setAccountSettings(prev => ({ ...prev, ...prefs.account }));
+          if (prefs.notifications) setNotificationSettings(prev => ({ ...prev, ...prefs.notifications }));
+        }
+      } catch (error) {
+        console.error("Error fetching preferences:", error);
+      }
+    };
+
+    fetchPreferences();
+  }, [user]);
+
+  const savePreferences = async (type: 'account' | 'notifications', newData: any) => {
+    if (!user) return;
+
+    try {
+      // First get current preferences to merge
+      const { data: currentData } = await supabase
+        .from('profiles')
+        .select('preferences')
+        .eq('id', user.id)
+        .single();
+
+      const currentPrefs = currentData?.preferences || {};
+
+      const updatedPrefs = {
+        ...currentPrefs,
+        [type]: newData
+      };
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ preferences: updatedPrefs })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      if (type === 'account') {
+        toast.success("Account settings saved successfully");
+      }
+      // For notifications, we don't toast on every toggle to avoid spam
+    } catch (error) {
+      console.error("Error saving preferences:", error);
+      toast.error("Failed to save settings");
+    }
+  };
+
+  const handleNotificationToggle = async (setting: keyof typeof notificationSettings) => {
+    const newSettings = {
+      ...notificationSettings,
+      [setting]: !notificationSettings[setting]
+    };
+
+    setNotificationSettings(newSettings);
+    // Auto-save
+    await savePreferences('notifications', newSettings);
   };
 
   const handleSaveAccount = () => {
-    toast.success("Account settings saved successfully");
+    savePreferences('account', accountSettings);
   };
-
-  const [activeTab, setActiveTab] = useState("account");
 
   return (
     <div className="space-y-6">
@@ -68,41 +132,41 @@ const Settings = () => {
 
       <div className="w-full">
         <div className="border rounded-md p-1 flex flex-wrap space-x-1 bg-muted mb-6">
-          <Button 
-            variant={activeTab === "account" ? "default" : "ghost"} 
-            size="sm" 
+          <Button
+            variant={activeTab === "account" ? "default" : "ghost"}
+            size="sm"
             onClick={() => setActiveTab("account")}
             className="text-sm"
           >
             Account
           </Button>
-          <Button 
-            variant={activeTab === "notifications" ? "default" : "ghost"} 
-            size="sm" 
+          <Button
+            variant={activeTab === "notifications" ? "default" : "ghost"}
+            size="sm"
             onClick={() => setActiveTab("notifications")}
             className="text-sm"
           >
             Notifications
           </Button>
-          <Button 
-            variant={activeTab === "appearance" ? "default" : "ghost"} 
-            size="sm" 
+          <Button
+            variant={activeTab === "appearance" ? "default" : "ghost"}
+            size="sm"
             onClick={() => setActiveTab("appearance")}
             className="text-sm"
           >
             Appearance
           </Button>
-          <Button 
-            variant={activeTab === "collaboration" ? "default" : "ghost"} 
-            size="sm" 
+          <Button
+            variant={activeTab === "collaboration" ? "default" : "ghost"}
+            size="sm"
             onClick={() => setActiveTab("collaboration")}
             className="text-sm"
           >
             Collaboration
           </Button>
-          <Button 
-            variant={activeTab === "billing" ? "default" : "ghost"} 
-            size="sm" 
+          <Button
+            variant={activeTab === "billing" ? "default" : "ghost"}
+            size="sm"
             onClick={() => setActiveTab("billing")}
             className="text-sm"
           >
@@ -124,38 +188,38 @@ const Settings = () => {
                   <Label htmlFor="language">Language</Label>
                   <div className="relative">
                     <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
+                    <Input
                       id="language"
-                      className="pl-10" 
+                      className="pl-10"
                       value={accountSettings.language}
-                      onChange={(e) => setAccountSettings({...accountSettings, language: e.target.value})}
+                      onChange={(e) => setAccountSettings({ ...accountSettings, language: e.target.value })}
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="timezone">Timezone</Label>
-                  <Input 
-                    id="timezone" 
+                  <Input
+                    id="timezone"
                     value={accountSettings.timezone}
-                    onChange={(e) => setAccountSettings({...accountSettings, timezone: e.target.value})}
+                    onChange={(e) => setAccountSettings({ ...accountSettings, timezone: e.target.value })}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="dateFormat">Date Format</Label>
-                  <Input 
-                    id="dateFormat" 
+                  <Input
+                    id="dateFormat"
                     value={accountSettings.dateFormat}
-                    onChange={(e) => setAccountSettings({...accountSettings, dateFormat: e.target.value})}
+                    onChange={(e) => setAccountSettings({ ...accountSettings, dateFormat: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="timeFormat">Time Format</Label>
-                  <Input 
-                    id="timeFormat" 
+                  <Input
+                    id="timeFormat"
                     value={accountSettings.timeFormat}
-                    onChange={(e) => setAccountSettings({...accountSettings, timeFormat: e.target.value})}
+                    onChange={(e) => setAccountSettings({ ...accountSettings, timeFormat: e.target.value })}
                   />
                 </div>
               </div>
@@ -186,8 +250,8 @@ const Settings = () => {
                       Email Notifications
                     </Label>
                   </div>
-                  <Switch 
-                    id="emailNotifications" 
+                  <Switch
+                    id="emailNotifications"
                     checked={notificationSettings.emailNotifications}
                     onCheckedChange={() => handleNotificationToggle('emailNotifications')}
                   />
@@ -199,8 +263,8 @@ const Settings = () => {
                       Push Notifications
                     </Label>
                   </div>
-                  <Switch 
-                    id="pushNotifications" 
+                  <Switch
+                    id="pushNotifications"
                     checked={notificationSettings.pushNotifications}
                     onCheckedChange={() => handleNotificationToggle('pushNotifications')}
                   />
@@ -212,8 +276,8 @@ const Settings = () => {
                       Weekly Digest
                     </Label>
                   </div>
-                  <Switch 
-                    id="weeklyDigest" 
+                  <Switch
+                    id="weeklyDigest"
                     checked={notificationSettings.weeklyDigest}
                     onCheckedChange={() => handleNotificationToggle('weeklyDigest')}
                   />
@@ -225,8 +289,8 @@ const Settings = () => {
                       Mention Alerts
                     </Label>
                   </div>
-                  <Switch 
-                    id="mentionAlerts" 
+                  <Switch
+                    id="mentionAlerts"
                     checked={notificationSettings.mentionAlerts}
                     onCheckedChange={() => handleNotificationToggle('mentionAlerts')}
                   />
@@ -238,8 +302,8 @@ const Settings = () => {
                       Task Reminders
                     </Label>
                   </div>
-                  <Switch 
-                    id="taskReminders" 
+                  <Switch
+                    id="taskReminders"
                     checked={notificationSettings.taskReminders}
                     onCheckedChange={() => handleNotificationToggle('taskReminders')}
                   />
@@ -261,24 +325,24 @@ const Settings = () => {
               <div className="space-y-4">
                 <Label>Theme</Label>
                 <div className="grid grid-cols-3 gap-4">
-                  <Button 
-                    variant={theme === "light" ? "default" : "outline"} 
+                  <Button
+                    variant={theme === "light" ? "default" : "outline"}
                     className="flex flex-col items-center justify-center gap-2 h-24"
                     onClick={() => setTheme("light")}
                   >
                     <Sun className="h-6 w-6" />
                     <span>Light</span>
                   </Button>
-                  <Button 
-                    variant={theme === "dark" ? "default" : "outline"} 
+                  <Button
+                    variant={theme === "dark" ? "default" : "outline"}
                     className="flex flex-col items-center justify-center gap-2 h-24"
                     onClick={() => setTheme("dark")}
                   >
                     <Moon className="h-6 w-6" />
                     <span>Dark</span>
                   </Button>
-                  <Button 
-                    variant={theme === "system" ? "default" : "outline"} 
+                  <Button
+                    variant={theme === "system" ? "default" : "outline"}
                     className="flex flex-col items-center justify-center gap-2 h-24"
                     onClick={() => setTheme("system")}
                   >
@@ -294,7 +358,7 @@ const Settings = () => {
         {activeTab === "collaboration" && (
           <CollaborationSettings />
         )}
-        
+
         {activeTab === "billing" && (
           <Card>
             <CardHeader>
@@ -313,7 +377,7 @@ const Settings = () => {
                   <Button variant="outline">Upgrade</Button>
                 </div>
               </div>
-              
+
               <div className="p-4 border rounded-md">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">

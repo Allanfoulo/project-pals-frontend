@@ -1,69 +1,64 @@
-# Welcome to your Lovable project
+# TaskFlow - AI-Enhanced Project Management
 
-## Project info
+TaskFlow is a modern project management application built with React, Vite, and Tailwind CSS, featuring advanced AI capabilities to streamline your workflow.
 
-**URL**: https://lovable.dev/projects/548d0ad1-1d59-4dd7-929d-a4ad6875fc5d
+## 🚀 Key Features
 
-## How can I edit this code?
+### 🧠 AI-Powered Autopilot
+- **Intelligent Monitoring**: The "Autopilot" mode monitors project activity and provides proactive suggestions.
+- **Optimization Hints**: Receive real-time advice on resource allocation, blocker resolution, and task velocity.
 
-There are several ways of editing your application.
+### ✨ Magic Task Breakdown
+- **Smart Subtasks**: Automatically break down complex tasks into manageable subtasks using AI.
+- **Interactive Checklist**: Track progress with a granular subtask checklist directly within the task view.
 
-**Use Lovable**
+### 🔌 n8n Integration Hub
+- **Workflow Automation**: Connect your projects to n8n via webhooks.
+- **Event Triggers**: Trigger external workflows based on task creation, completion, or project updates.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/548d0ad1-1d59-4dd7-929d-a4ad6875fc5d) and start prompting.
+### 📊 Intelligent Dashboard
+- **Smart Insights**: Get AI-generated summaries of your project health and recent activities.
+- **Visual Analytics**: Dynamic charts and progress tracking for data-driven decision making.
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🛠️ Technology Stack
 
-**Use your preferred IDE**
+- **Frontend**: React, Vite, TypeScript
+- **Styling**: Tailwind CSS, shadcn/ui
+- **Icons**: Lucide React
+- **AI**: Google Gemini API (@google/genai)
+- **State Management**: Context API & Hooks
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🏁 Getting Started
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   ```
 
-Follow these steps:
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+3. **Configure Environment**
+   Create a `.env` file in the root directory and add your Gemini API key:
+   ```env
+   VITE_GEMINI_API_KEY=your_api_key_here
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+4. **Run the development server**
+   ```bash
+   npm run dev
+   ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+## 📱 Mobile Responsiveness
+The application is fully responsive, featuring a collapsible sidebar on desktop and a convenient slide-out navigation sheet on mobile devices.
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+## 🎨 UI/UX
+Designed with a focus on usability and aesthetics, featuring:
+- Dark/Light mode support
+- Smooth animations and transitions
+- Glassmorphism effects for a modern look
 
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with .
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/548d0ad1-1d59-4dd7-929d-a4ad6875fc5d) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+---
+Built with ❤️ by TaskFlow Team

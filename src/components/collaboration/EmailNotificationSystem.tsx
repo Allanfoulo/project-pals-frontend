@@ -38,7 +38,7 @@ const EmailNotificationSystem = ({ className }: EmailNotificationSystemProps) =>
   const [email, setEmail] = useState("");
   const [emailVerified, setEmailVerified] = useState(false);
   const [emailEnabled, setEmailEnabled] = useState(true);
-  
+
   // Enhanced notification settings with more options and better structure
   const [notificationTypes, setNotificationTypes] = useState<NotificationType[]>([
     {
@@ -90,7 +90,7 @@ const EmailNotificationSystem = ({ className }: EmailNotificationSystemProps) =>
       frequency: "weekly",
     },
   ]);
-  
+
   // Keep the original settings for backward compatibility
   const [notificationSettings, setNotificationSettings] = useState({
     taskAssignments: true,
@@ -101,7 +101,7 @@ const EmailNotificationSystem = ({ className }: EmailNotificationSystemProps) =>
     dailyDigest: false,
     weeklyDigest: true,
   });
-  
+
   // Enhanced digest settings
   const [digestSettings, setDigestSettings] = useState<DigestSetting[]>([
     {
@@ -118,7 +118,7 @@ const EmailNotificationSystem = ({ className }: EmailNotificationSystemProps) =>
       enabled: true,
     },
   ]);
-  
+
   const handleVerifyEmail = () => {
     // In a real app, this would send a verification email
     // For demo purposes, we'll just simulate verification
@@ -128,7 +128,7 @@ const EmailNotificationSystem = ({ className }: EmailNotificationSystemProps) =>
         title: "Verification email sent",
         description: "Please check your inbox to complete verification.",
       });
-      
+
       // Simulate automatic verification after a delay
       setTimeout(() => {
         setEmailVerified(true);
@@ -145,14 +145,14 @@ const EmailNotificationSystem = ({ className }: EmailNotificationSystemProps) =>
       });
     }
   };
-  
+
   const handleToggleSetting = (setting: keyof typeof notificationSettings) => {
     setNotificationSettings(prev => ({
       ...prev,
       [setting]: !prev[setting]
     }));
   };
-  
+
   const handleToggleEmailEnabled = (enabled: boolean) => {
     setEmailEnabled(enabled);
     toast({
@@ -162,7 +162,7 @@ const EmailNotificationSystem = ({ className }: EmailNotificationSystemProps) =>
         : "You will no longer receive any email notifications.",
     });
   };
-  
+
   const handleUpdateNotificationType = (
     id: string,
     field: "enabled" | "emailEnabled" | "frequency",
@@ -173,7 +173,7 @@ const EmailNotificationSystem = ({ className }: EmailNotificationSystemProps) =>
         type.id === id ? { ...type, [field]: value } : type
       )
     );
-    
+
     // Update the original settings for backward compatibility
     if (field === "emailEnabled") {
       const type = notificationTypes.find(t => t.id === id);
@@ -192,7 +192,7 @@ const EmailNotificationSystem = ({ className }: EmailNotificationSystemProps) =>
       }
     }
   };
-  
+
   const handleUpdateDigestSetting = (
     id: string,
     field: "time" | "day" | "enabled",
@@ -203,7 +203,7 @@ const EmailNotificationSystem = ({ className }: EmailNotificationSystemProps) =>
         setting.id === id ? { ...setting, [field]: value } : setting
       )
     );
-    
+
     // Update the original settings for backward compatibility
     if (field === "enabled") {
       const digest = digestSettings.find(d => d.id === id);
@@ -216,7 +216,7 @@ const EmailNotificationSystem = ({ className }: EmailNotificationSystemProps) =>
       }
     }
   };
-  
+
   const handleSaveSettings = () => {
     // In a real app, this would save the settings to a backend
     toast({
@@ -225,7 +225,7 @@ const EmailNotificationSystem = ({ className }: EmailNotificationSystemProps) =>
       variant: "default",
     });
   };
-  
+
   return (
     <Card className={className}>
       <CardHeader>
@@ -277,15 +277,15 @@ const EmailNotificationSystem = ({ className }: EmailNotificationSystemProps) =>
               Preview
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="settings" className="space-y-6 mt-6">
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Email Address</h3>
               <div className="flex gap-2">
-                <Input 
-                  type="email" 
-                  placeholder="your@email.com" 
-                  value={email} 
+                <Input
+                  type="email"
+                  placeholder="your@email.com"
+                  value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="flex-1"
                   disabled={emailVerified}
@@ -301,9 +301,9 @@ const EmailNotificationSystem = ({ className }: EmailNotificationSystemProps) =>
                 </p>
               )}
             </div>
-            
+
             <Separator />
-            
+
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Digest Settings</h3>
               <div className="space-y-4">
@@ -417,7 +417,7 @@ const EmailNotificationSystem = ({ className }: EmailNotificationSystemProps) =>
                 ))}
               </div>
             </div>
-            
+
             <div className="flex justify-end">
               <Button onClick={handleSaveSettings}>
                 <Save className="mr-2 h-4 w-4" />
@@ -425,14 +425,14 @@ const EmailNotificationSystem = ({ className }: EmailNotificationSystemProps) =>
               </Button>
             </div>
           </TabsContent>
-          
+
           <TabsContent value="notifications" className="space-y-6 mt-6">
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Notification Preferences</h3>
               <p className="text-sm text-muted-foreground">
                 Configure which notifications you receive and how they are delivered
               </p>
-              
+
               <div className="space-y-4 mt-4">
                 {notificationTypes.map((notification) => (
                   <div key={notification.id} className="border rounded-md p-4">
@@ -520,7 +520,7 @@ const EmailNotificationSystem = ({ className }: EmailNotificationSystemProps) =>
                   </div>
                 ))}
               </div>
-              
+
               <Alert className="mt-4">
                 <Info className="h-4 w-4" />
                 <AlertTitle>Notification Frequency</AlertTitle>
@@ -531,14 +531,14 @@ const EmailNotificationSystem = ({ className }: EmailNotificationSystemProps) =>
               </Alert>
             </div>
           </TabsContent>
-          
+
           <TabsContent value="preview" className="mt-6">
             <div className="border rounded-md p-4 space-y-4">
               <div className="border-b pb-2">
                 <h3 className="font-medium">Sample Task Assignment Email</h3>
               </div>
               <div className="space-y-2">
-                <p className="text-sm font-medium">Subject: [Project Pals] New task assigned to you</p>
+                <p className="text-sm font-medium">Subject: [TaskFlow] New task assigned to you</p>
                 <div className="bg-muted p-4 rounded-md">
                   <p className="text-sm">Hi John,</p>
                   <p className="text-sm mt-2">You have been assigned a new task:</p>
@@ -547,17 +547,17 @@ const EmailNotificationSystem = ({ className }: EmailNotificationSystemProps) =>
                   <p className="text-sm">Due date: April 10, 2025</p>
                   <p className="text-sm">Priority: High</p>
                   <div className="mt-4 border-t pt-2">
-                    <p className="text-sm">View this task in Project Pals:</p>
-                    <p className="text-sm text-blue-500 underline">https://projectpals.com/tasks/123</p>
+                    <p className="text-sm">View this task in TaskFlow:</p>
+                    <p className="text-sm text-blue-500 underline">https://taskflow.com/tasks/123</p>
                   </div>
                 </div>
               </div>
-              
+
               <div className="border-b pb-2 pt-4">
                 <h3 className="font-medium">Sample Comment Notification Email</h3>
               </div>
               <div className="space-y-2">
-                <p className="text-sm font-medium">Subject: [Project Pals] New comment on "Implement user authentication"</p>
+                <p className="text-sm font-medium">Subject: [TaskFlow] New comment on "Implement user authentication"</p>
                 <div className="bg-muted p-4 rounded-md">
                   <p className="text-sm">Hi John,</p>
                   <p className="text-sm mt-2">Jane Smith commented on a task you're following:</p>
@@ -566,20 +566,20 @@ const EmailNotificationSystem = ({ className }: EmailNotificationSystemProps) =>
                   </div>
                   <div className="mt-4 border-t pt-2">
                     <p className="text-sm">Reply to this comment:</p>
-                    <p className="text-sm text-blue-500 underline">https://projectpals.com/tasks/123#comments</p>
+                    <p className="text-sm text-blue-500 underline">https://taskflow.com/tasks/123#comments</p>
                   </div>
                 </div>
               </div>
-              
+
               <div className="border-b pb-2 pt-4">
                 <h3 className="font-medium">Sample Daily Digest Email</h3>
               </div>
               <div className="space-y-2">
-                <p className="text-sm font-medium">Subject: [Project Pals] Your Daily Digest - April 3, 2025</p>
+                <p className="text-sm font-medium">Subject: [TaskFlow] Your Daily Digest - April 3, 2025</p>
                 <div className="bg-muted p-4 rounded-md">
                   <p className="text-sm">Hi John,</p>
                   <p className="text-sm mt-2">Here's your daily summary:</p>
-                  
+
                   <div className="mt-3">
                     <p className="text-sm font-medium">New Tasks (2)</p>
                     <ul className="list-disc list-inside text-sm mt-1 space-y-1">
@@ -587,7 +587,7 @@ const EmailNotificationSystem = ({ className }: EmailNotificationSystemProps) =>
                       <li>Update API documentation (Due: Apr 8)</li>
                     </ul>
                   </div>
-                  
+
                   <div className="mt-3">
                     <p className="text-sm font-medium">Comments (3)</p>
                     <ul className="list-disc list-inside text-sm mt-1 space-y-1">
@@ -596,7 +596,7 @@ const EmailNotificationSystem = ({ className }: EmailNotificationSystemProps) =>
                       <li>Lisa replied to your comment in "Frontend testing"</li>
                     </ul>
                   </div>
-                  
+
                   <div className="mt-3">
                     <p className="text-sm font-medium">Upcoming Deadlines</p>
                     <ul className="list-disc list-inside text-sm mt-1 space-y-1">
@@ -604,10 +604,10 @@ const EmailNotificationSystem = ({ className }: EmailNotificationSystemProps) =>
                       <li>Weekly team meeting (2 days)</li>
                     </ul>
                   </div>
-                  
+
                   <div className="mt-4 border-t pt-2">
                     <p className="text-sm">View all your tasks and notifications:</p>
-                    <p className="text-sm text-blue-500 underline">https://projectpals.com/dashboard</p>
+                    <p className="text-sm text-blue-500 underline">https://taskflow.com/dashboard</p>
                   </div>
                 </div>
               </div>

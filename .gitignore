@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Agent Configuration
+.agent/skills
+
+# Environment and Logs
+.env
+build_log.txt
+vite.config.ts.timestamp-*

@@ -1,5 +1,6 @@
-
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { supabase } from "@/lib/supabase";
+import { Session, User as SupabaseUser } from "@supabase/supabase-js";
 
 export type User = {
   id: string;
@@ -11,57 +12,99 @@ export type User = {
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock user data
-const mockUser: User = {
-  id: "user-1",
-  name: "Alex Johnson",
-  email: "alex@example.com",
-  avatarUrl: "https://i.pravatar.cc/150?u=alex",
-  role: "admin",
-};
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Check active sessions and sets the user
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      if (session?.user) {
+        setUser(mapSupabaseUser(session.user));
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    };
+
+    getSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session?.user) {
+        setUser(mapSupabaseUser(session.user));
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const mapSupabaseUser = (authUser: SupabaseUser): User => {
+    return {
+      id: authUser.id,
+      name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || "User",
+      email: authUser.email || "",
+      avatarUrl: authUser.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${authUser.email}`,
+      role: (authUser.user_metadata?.role as "admin" | "manager" | "member") || "member",
+    };
+  };
 
   const login = async (email: string, password: string) => {
-    // This would normally validate with a backend
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setUser(mockUser);
-    return Promise.resolve();
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) throw error;
   };
 
   const signup = async (name: string, email: string, password: string) => {
-    // This would normally register with a backend
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setUser({
-      ...mockUser,
-      name,
+    const { error } = await supabase.auth.signUp({
       email,
+      password,
+      options: {
+        data: {
+          name,
+          role: "member", // Default role
+        },
+      },
     });
-    return Promise.resolve();
+    if (error) throw error;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
     setUser(null);
+    setSession(null);
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        isAuthenticated: !!user,
+        session,
+        isAuthenticated: !!session,
+        isLoading: loading,
         login,
         signup,
-        register: signup, // Alias for signup
+        register: signup,
         logout,
       }}
     >

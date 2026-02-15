@@ -17,6 +17,11 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "lucide-react/dynamicIconImports.mjs": "lucide-react/dynamicIconImports",
+      "@crayonai/react-core": path.resolve(__dirname, "./node_modules/@crayonai/react-core"),
+      "@crayonai/stream": path.resolve(__dirname, "./node_modules/@crayonai/stream"),
+      "zustand": path.resolve(__dirname, "./node_modules/zustand"),
+      "zustand/react/shallow": path.resolve(__dirname, "./node_modules/zustand/react/shallow"),
     },
   },
 }));

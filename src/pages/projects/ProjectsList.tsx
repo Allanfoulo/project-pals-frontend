@@ -58,7 +58,7 @@ const ProjectsList = () => {
           return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
         }
         return 0;
-      
+
       case "dueDate-asc":
         if (a.dueDate && b.dueDate) {
           return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
@@ -66,7 +66,7 @@ const ProjectsList = () => {
         if (a.dueDate && !b.dueDate) return -1;
         if (!a.dueDate && b.dueDate) return 1;
         return 0;
-      
+
       case "dueDate-desc":
         if (a.dueDate && b.dueDate) {
           return new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
@@ -74,25 +74,25 @@ const ProjectsList = () => {
         if (a.dueDate && !b.dueDate) return -1;
         if (!a.dueDate && b.dueDate) return 1;
         return 0;
-      
+
       case "name-asc":
         return a.name.localeCompare(b.name);
-      
+
       case "name-desc":
         return b.name.localeCompare(a.name);
-      
+
       case "progress-asc":
         return a.progress - b.progress;
-      
+
       case "progress-desc":
         return b.progress - a.progress;
-      
+
       case "created-asc":
         return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      
+
       case "created-desc":
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      
+
       default:
         return 0;
     }
@@ -101,11 +101,11 @@ const ProjectsList = () => {
   // Check if a project is overdue or due soon
   const getProjectTimeStatus = (project) => {
     if (!project.dueDate) return "none";
-    
+
     const dueDate = parseISO(project.dueDate);
     const today = new Date();
     const daysRemaining = differenceInDays(dueDate, today);
-    
+
     if (daysRemaining < 0) return "overdue";
     if (daysRemaining <= 7) return "soon";
     return "normal";
@@ -125,15 +125,15 @@ const ProjectsList = () => {
         </div>
       </div>
 
-      <ProjectSearch 
-        onFilterChange={setFilteredProjects} 
+      <ProjectSearch
+        onFilterChange={setFilteredProjects}
       />
-      
+
       <div className="flex justify-between items-center">
         <div className="text-sm text-muted-foreground">
           {filteredProjects.length} project{filteredProjects.length !== 1 && "s"} found
         </div>
-        
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="gap-2">
@@ -142,7 +142,7 @@ const ProjectsList = () => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem 
+            <DropdownMenuItem
               className="cursor-pointer"
               onClick={() => setSortOption("favorite")}
             >
@@ -151,14 +151,14 @@ const ProjectsList = () => {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Due Date</DropdownMenuLabel>
-            <DropdownMenuItem 
+            <DropdownMenuItem
               className="cursor-pointer"
               onClick={() => setSortOption("dueDate-asc")}
             >
               Earliest first
               {sortOption === "dueDate-asc" && <CheckCircle2 className="ml-auto h-4 w-4" />}
             </DropdownMenuItem>
-            <DropdownMenuItem 
+            <DropdownMenuItem
               className="cursor-pointer"
               onClick={() => setSortOption("dueDate-desc")}
             >
@@ -167,14 +167,14 @@ const ProjectsList = () => {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Name</DropdownMenuLabel>
-            <DropdownMenuItem 
+            <DropdownMenuItem
               className="cursor-pointer"
               onClick={() => setSortOption("name-asc")}
             >
               A-Z
               {sortOption === "name-asc" && <CheckCircle2 className="ml-auto h-4 w-4" />}
             </DropdownMenuItem>
-            <DropdownMenuItem 
+            <DropdownMenuItem
               className="cursor-pointer"
               onClick={() => setSortOption("name-desc")}
             >
@@ -183,14 +183,14 @@ const ProjectsList = () => {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Progress</DropdownMenuLabel>
-            <DropdownMenuItem 
+            <DropdownMenuItem
               className="cursor-pointer"
               onClick={() => setSortOption("progress-asc")}
             >
               Lowest first
               {sortOption === "progress-asc" && <CheckCircle2 className="ml-auto h-4 w-4" />}
             </DropdownMenuItem>
-            <DropdownMenuItem 
+            <DropdownMenuItem
               className="cursor-pointer"
               onClick={() => setSortOption("progress-desc")}
             >
@@ -199,14 +199,14 @@ const ProjectsList = () => {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Created Date</DropdownMenuLabel>
-            <DropdownMenuItem 
+            <DropdownMenuItem
               className="cursor-pointer"
               onClick={() => setSortOption("created-desc")}
             >
               Newest first
               {sortOption === "created-desc" && <CheckCircle2 className="ml-auto h-4 w-4" />}
             </DropdownMenuItem>
-            <DropdownMenuItem 
+            <DropdownMenuItem
               className="cursor-pointer"
               onClick={() => setSortOption("created-asc")}
             >
@@ -219,17 +219,20 @@ const ProjectsList = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {sortedProjects.length > 0 ? (
-          sortedProjects.map((project) => {
+          sortedProjects.map((project, index) => {
             const workspace = workspaces.find((w) => w.id === project.workspace);
             const timeStatus = getProjectTimeStatus(project);
-            
+
             return (
               <Link
                 to={`/projects/${project.id}`}
                 key={project.id}
                 className="group"
               >
-                <Card className="h-full transition-all hover:shadow-md">
+                <Card
+                  className="h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1 animate-slide-up"
+                  style={{ animationDelay: `${index * 0.05}s` }}
+                >
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
                       <div className="space-y-1">
@@ -240,13 +243,13 @@ const ProjectsList = () => {
                           )}
                         </CardTitle>
                         {workspace && (
-                          <Badge 
+                          <Badge
                             variant="outline"
                             className="text-xs"
-                            style={{ 
-                              backgroundColor: workspace.color, 
-                              color: "white", 
-                              borderColor: workspace.color 
+                            style={{
+                              backgroundColor: workspace.color,
+                              color: "white",
+                              borderColor: workspace.color
                             }}
                           >
                             {workspace.name}
@@ -281,7 +284,7 @@ const ProjectsList = () => {
                         </div>
                         <Progress value={project.progress} className="h-2" />
                       </div>
-                      
+
                       <div className="flex justify-between items-center text-sm">
                         <div className="flex items-center gap-1.5 text-muted-foreground">
                           <Calendar className="h-4 w-4" />
@@ -289,7 +292,7 @@ const ProjectsList = () => {
                             {format(new Date(project.createdAt), "MMM d, yyyy")}
                           </span>
                         </div>
-                        
+
                         {project.dueDate && (
                           <div className="flex items-center gap-1.5">
                             {timeStatus === "overdue" ? (
@@ -305,7 +308,7 @@ const ProjectsList = () => {
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-1 text-sm text-muted-foreground">
                           <span>
@@ -317,10 +320,10 @@ const ProjectsList = () => {
                             </span>
                           )}
                         </div>
-                        
+
                         <Badge variant={project.status === "active" ? "default" : project.status === "completed" ? "success" : "outline"}>
-                          {project.status === "active" ? "Active" : 
-                           project.status === "completed" ? "Completed" : "On Hold"}
+                          {project.status === "active" ? "Active" :
+                            project.status === "completed" ? "Completed" : "On Hold"}
                         </Badge>
                       </div>
                     </div>
@@ -358,7 +361,7 @@ const ProjectsList = () => {
             <p className="text-muted-foreground mt-1 mb-4">
               Try adjusting your search or filter criteria
             </p>
-            <CreateProjectModal 
+            <CreateProjectModal
               trigger={
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
